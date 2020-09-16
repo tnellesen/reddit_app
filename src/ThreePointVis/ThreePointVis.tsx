@@ -7,7 +7,7 @@ import { Stats } from "./Stats";
 import { Effects } from "./Effects";
 import { Text, Position } from "./Text";
 import { ClusterHulls } from "./ClusterHulls";
-import { Cluster, Point } from "~/App";
+import { Cluster, Point } from "../App";
 import { useViewport } from "../ViewportHooks";
 import { CLIP_SCALE_FACTOR } from "../constants";
 

@@ -1,2 +1,5 @@
 # reddit_app
-Created with CodeSandbox
+Originally Created with CodeSandbox
+
+#To run locally for development
+`npm run start`

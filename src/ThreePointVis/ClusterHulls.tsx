@@ -1,9 +1,6 @@
 import * as React from "react";
 import * as THREE from "three";
-import { Cluster } from "~/App";
-import * as FIBER from "react-three-fiber";
-import { SelectedId } from "./ThreePointVis";
-import { MeshStandardMaterial } from "three";
+import { Cluster } from "../App";
 import { clusterColors } from "../constants";
 
 interface ClusterHullsProps {

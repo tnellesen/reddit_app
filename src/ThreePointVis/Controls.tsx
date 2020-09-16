@@ -3,9 +3,8 @@ import { extend, useThree, useFrame } from "react-three-fiber";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import useEventListener from "@use-it/event-listener";
 import * as THREE from "three";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { SCALE_FACTOR } from "../constants";
-import { ThreePointVis } from "./ThreePointVis";
 
 interface ControlsProps {
   target: THREE.Vector3 | null;
@@ -13,10 +12,6 @@ interface ControlsProps {
 }
 
 extend({ OrbitControls });
-
-const ALT_KEY = 18;
-const CTRL_KEY = 17;
-const CMD_KEY = 91;
 
 const TARGET_THRESHOLD = 0.1 * SCALE_FACTOR;
 const TARGET_THRESHOLD_MULTIPLIER = 200;

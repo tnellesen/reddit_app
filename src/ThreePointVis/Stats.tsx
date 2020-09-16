@@ -7,7 +7,6 @@ export function Stats() {
   useEffect(() => {
     stats.showPanel(0);
     document.body.appendChild(stats.dom);
-    return () => document.body.removeChild(stats.dom);
   }, [stats]);
   return useFrame((state) => {
     stats.begin();
