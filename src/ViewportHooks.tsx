@@ -2,12 +2,18 @@
 
 import React from "react";
 
+interface ViewportProviderProps {
+  children: React.ReactNode
+}
+
 const viewportContext = React.createContext<{ width: number; height: number }>({
   width: 0,
   height: 0
 });
 
-export const ViewportProvider = ({ children }) => {
+export const ViewportProvider = ( props: ViewportProviderProps ) => {
+  const {children} = props;
+
   const [width, setWidth] = React.useState(window.innerWidth);
   const [height, setHeight] = React.useState(window.innerHeight);
   const handleWindowResize = () => {

@@ -2,7 +2,7 @@ import * as React from "react";
 import * as THREE from "three";
 import { SelectedId, SelectHandler } from "./ThreePointVis";
 import { MouseEvent, useThree, useFrame, Camera } from "react-three-fiber";
-import { Point } from "~/App";
+import { Point } from "../App";
 import { Frustum, Matrix4, Vector3, InstancedBufferAttribute } from "three";
 import { SCALE_FACTOR, clusterColors } from "../constants";
 import { MutableRefObject } from "react";
@@ -185,7 +185,6 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
   const { camera } = useThree();
 
   const numPoints = data.length;
-  let visibleInstanceCount = numPoints;
 
   let colorAttrib = React.useRef<THREE.InstancedBufferAttribute>();
   let colorArray = React.useMemo(() => new Float32Array(numPoints * 3), [

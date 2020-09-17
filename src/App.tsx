@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ThreePointVis } from "./ThreePointVis/ThreePointVis";
 import "./styles.scss";
-import redditClusters from "../data/redditClusters.json";
+//import redditClusters from "../data/redditClusters.json";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import {
   Group,
@@ -58,8 +58,8 @@ export default function App() {
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
 
-  const [{ data, loading, error }, refetch] = useAxios(
-    `https://redditexplorer.com/GetData/start:1,stop:50000,dim:3,n_clusters:10,method:kmeans,cluster_hulls:yes`
+  const [{ data, loading, error }] = useAxios(
+    `https://redditexplorer.com/GetData/start:1,stop:10000,dim:3,n_clusters:10,method:kmeans,cluster_hulls:yes`
   );
 
   //const data = redditClusters ;
@@ -73,7 +73,7 @@ export default function App() {
             x: point.x,
             y: point.y,
             z: point.z,
-            cluster: point.cluster,
+            cluster: point.cluster_10,
             percentNsfw: point.percentNsfw,
             include: point.percentNsfw <= maxPercentNSFW
           };
@@ -106,6 +106,8 @@ export default function App() {
 
   return (
     <div className="App">
+      {loading && <span>loading data...</span>}
+      {error && <span>{error}</span>}
       <ViewportProvider>
         <div className="vis-container">
           {hasData && (
