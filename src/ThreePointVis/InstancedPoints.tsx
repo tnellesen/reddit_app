@@ -238,31 +238,33 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
 
   return (
     <>
-      <instancedMesh
-        ref={meshRef}
-        args={[
-          // TODO sort out the bugged typing here.
-          // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
-          (null as unknown) as THREE.BufferGeometry,
-          (null as unknown) as THREE.Material,
-          numPoints
-        ]}
-        onPointerUp={handleClick}
-        onPointerDown={handlePointerDown}
-      >
-        <sphereBufferGeometry
-          attach="geometry"
-          args={[pointRadius, pointSegments, pointSegments]}
-          key={pointSegments}
+      {data &&
+        <instancedMesh
+            ref={meshRef}
+            args={[
+              // TODO sort out the bugged typing here.
+              // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
+              (null as unknown) as THREE.BufferGeometry,
+              (null as unknown) as THREE.Material,
+              numPoints
+            ]}
+            onPointerUp={handleClick}
+            onPointerDown={handlePointerDown}
         >
-          <instancedBufferAttribute
-            ref={colorAttrib}
-            attachObject={["attributes", "color"]}
-            args={[colorArray, 3]}
-          />
-        </sphereBufferGeometry>
-        <meshStandardMaterial attach="material" vertexColors />
-      </instancedMesh>
+            <sphereBufferGeometry
+                attach="geometry"
+                args={[pointRadius, pointSegments, pointSegments]}
+                key={pointSegments}
+            >
+                <instancedBufferAttribute
+                    ref={colorAttrib}
+                    attachObject={["attributes", "color"]}
+                    args={[colorArray, 3]}
+                />
+            </sphereBufferGeometry>
+            <meshStandardMaterial attach="material" vertexColors/>
+        </instancedMesh>
+      }
       {selectedId !== null && (
         <group
           position={[

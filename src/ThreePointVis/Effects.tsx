@@ -18,7 +18,7 @@ export function Effects() {
   useEffect(() => void composer.current!.setSize(size.width, size.height), [
     size
   ]);
-  useFrame(() => composer.current!.render(), 1);
+  useFrame(() => composer.current ? composer.current.render() : null, 1);
 
   const bloom = {
     resolution: aspect,

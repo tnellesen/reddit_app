@@ -53,14 +53,14 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
         groundColor={new THREE.Color("#080820")}
         intensity={1.0}
       />
-      <ClusterHulls clusters={clusters} />
-      <InstancedPoints
+      {clusters && <ClusterHulls clusters={clusters} /> }
+      {data && <InstancedPoints
         data={data}
         selectedId={selectedId}
         onSelect={onSelect}
         enableCulling
         pointSegments={pointResolution}
-      />
+      /> }
       {data && selected !== null && (
         <Text
           message={selected.subreddit}
