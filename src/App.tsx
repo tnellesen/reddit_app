@@ -47,9 +47,14 @@ const getMesh = (group: Group | Object3D): Mesh => {
   return new Mesh(geometry, material);
 };
 
+export const pointCounts = [10000, 25000, 50000];
+
 export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
   const [clusters, setClusters] = React.useState<Cluster[]>([]);
+  const [clusterIndex, setClusterIndex] = React.useState<number>(0);
+  const [pointCount, setPointCoint] = React.useState<number>(10000);
+  const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
@@ -59,7 +64,7 @@ export default function App() {
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
 
   const [{ data, loading, error }] = useAxios(
-    `https://redditexplorer.com/GetData/start:1,stop:10000,dim:3,n_clusters:10,method:kmeans,cluster_hulls:yes`
+    `https://redditexplorer.com/GetData/start:1,stop:${pointCount},dim:3,n_clusters:10,method:kmeans,cluster_hulls:yes`
   );
 
   //const data = redditClusters ;
@@ -73,15 +78,18 @@ export default function App() {
             x: point.x,
             y: point.y,
             z: point.z,
-            cluster: point.cluster_10,
+            cluster: point.cluster[clusterIndex],
             percentNsfw: point.percentNsfw,
             include: point.percentNsfw <= maxPercentNSFW
           };
         })
       : [];
 
+    const newClusterCounts = data ? data.clusterCounts : [];
+    const clusterCount = newClusterCounts[clusterIndex];
+
     const newClusters = data
-      ? data.clusters.map(
+      ? data.clusters[clusterCount].map(
           (cluster: any): Cluster => {
             return {
               id: cluster.id,
@@ -92,7 +100,24 @@ export default function App() {
       : [];
     setRedditData(newData);
     setClusters(newClusters);
-  }, [maxPercentNSFW, data]);
+    setClusterCounts(newClusterCounts)
+  }, [maxPercentNSFW, data, clusterIndex]);
+
+  React.useEffect(() => {
+    const clusterCount = clusterCounts[clusterIndex];
+
+    const newClusters = data
+      ? data.clusters[clusterCount].map(
+        (cluster: any): Cluster => {
+          return {
+            id: cluster.id,
+            obj: getMesh(loader.parse(cluster.obj))
+          };
+        }
+      )
+      : [];
+    setClusters(newClusters);
+  }, [clusterIndex, clusterCounts]);
 
   const search = () => {
     redditData.forEach((point) => {
@@ -102,25 +127,25 @@ export default function App() {
     });
   };
 
-  const hasData = redditData && Object.keys(redditData).length > 0;
-
   return (
     <div className="App">
       {loading && <span>loading data...</span>}
       {error && <span>{error}</span>}
-      <ViewportProvider>
-        <div className="vis-container">
-          {hasData && (
-            <ThreePointVis
-              data={redditData}
-              clusters={clusters}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              pointResolution={pointResolution}
-            />
-          )}
-        </div>
-      </ViewportProvider>
+      {!loading && data && (
+        <ViewportProvider>
+          <div className="vis-container">
+
+              <ThreePointVis
+                data={redditData}
+                clusters={clusters}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                pointResolution={pointResolution}
+              />
+            )
+          </div>
+        </ViewportProvider>)
+      }
       <div className="controls">
         <div className="controls-title-bar">
           <h3 className="title">Reddit Explorer</h3>
@@ -133,7 +158,7 @@ export default function App() {
         </div>
         {showControls && (
           <>
-            {hasData && selectedId !== null && (
+            {!loading && data && selectedId !== null && (
               <div className="selected-point">
                 You selected{" "}
                 <a
@@ -188,6 +213,21 @@ export default function App() {
                   value={maxPercentNSFW}
                   onChange={(event) => setMaxPercentNSFW(+event.target.value)}
                 />
+              </div>
+              <div>
+                <label htmlFor="numClusters" ># Clusters: </label>
+                <select name="numClusters" id="numClusters" onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}>
+                  {clusterCounts.map(clusterCount => <option value={clusterCount}>{clusterCount}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="pointCount" ># Points: </label>
+                <select name="pointCount" id="pointCount" onChange={(event) => {
+                  setPointCoint(+event.target.value);
+                  setSelectedId(null);
+                }}>
+                  {pointCounts.map(pointCount => <option value={pointCount}>{pointCount}</option>)}
+                </select>
               </div>
             </form>
           </>
