@@ -12,6 +12,7 @@ import {
 } from "three";
 import { ViewportProvider } from "./ViewportHooks";
 import useAxios from "axios-hooks";
+import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
 
 export interface Point {
   id: number;
@@ -98,15 +99,20 @@ export default function App() {
           }
         )
       : [];
-    setRedditData(newData);
-    setClusters(newClusters);
+
+    if(newData && newData.length) {
+      setRedditData(newData);
+    }
+    if(newClusters && newClusters.length) {
+      setClusters(newClusters);
+    }
     setClusterCounts(newClusterCounts)
   }, [maxPercentNSFW, data, clusterIndex]);
 
   React.useEffect(() => {
     const clusterCount = clusterCounts[clusterIndex];
 
-    const newClusters = data
+    const newClusters = data && clusterCount
       ? data.clusters[clusterCount].map(
         (cluster: any): Cluster => {
           return {
@@ -117,7 +123,7 @@ export default function App() {
       )
       : [];
     setClusters(newClusters);
-  }, [clusterIndex, clusterCounts]);
+  }, [clusterIndex, clusterCounts, data]);
 
   const search = () => {
     redditData.forEach((point) => {
@@ -129,12 +135,11 @@ export default function App() {
 
   return (
     <div className="App">
-      {loading && <span>loading data...</span>}
+      {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span>{error}</span>}
-      {!loading && data && (
-        <ViewportProvider>
+      {!loading && !error && redditData && redditData.length && (
+        <ViewportProvider key={redditData.length}>
           <div className="vis-container">
-
               <ThreePointVis
                 data={redditData}
                 clusters={clusters}
@@ -217,7 +222,7 @@ export default function App() {
               <div>
                 <label htmlFor="numClusters" ># Clusters: </label>
                 <select name="numClusters" id="numClusters" onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}>
-                  {clusterCounts.map(clusterCount => <option value={clusterCount}>{clusterCount}</option>)}
+                  {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
                 </select>
               </div>
               <div>
@@ -226,7 +231,7 @@ export default function App() {
                   setPointCoint(+event.target.value);
                   setSelectedId(null);
                 }}>
-                  {pointCounts.map(pointCount => <option value={pointCount}>{pointCount}</option>)}
+                  {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
                 </select>
               </div>
             </form>

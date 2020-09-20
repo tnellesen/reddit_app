@@ -1,0 +1,58 @@
+.loading-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  
+  z-index: 1;
+
+  .loader-backdrop {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 90%;
+  }
+
+  .loading-overlay-message {
+    color: white;
+    position: relative;
+    text-align: center;
+  }
+}
+
+// Below Adapted from https://projects.lukehaas.me/css-loaders/
+$filledBorder: 1.1em solid blue;
+$negativeBorder: 1.1em solid rgba(0, 0, 0, 0.5);
+
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 50vw;
+  height: 50vw;
+  width: 50vmin;
+  height: 50vmin;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  border-top: $negativeBorder;
+  border-right: $negativeBorder;
+  border-bottom: $negativeBorder;
+  border-left: $filledBorder;
+  transform: translateZ(0);
+  animation: load 0.91s infinite cubic-bezier(.43,.27,.82,.95)
+}
+@keyframes load {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

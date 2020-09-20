@@ -43,34 +43,33 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
   const { width } = useViewport();
 
   return (
-    <Canvas camera={{ position: [0, 0, 40], far: width * CLIP_SCALE_FACTOR }}>
-      <Stats />
-      <Controls target={cameraTarget} position={cameraPosition} />
-      <ambientLight color="#ffffff" intensity={0.1} />
-      <hemisphereLight
-        color="#ffffff"
-        skyColor={new THREE.Color("#ffffbb")}
-        groundColor={new THREE.Color("#080820")}
-        intensity={1.0}
-      />
-      {clusters && <ClusterHulls clusters={clusters} /> }
-      {data && <InstancedPoints
-        data={data}
-        selectedId={selectedId}
-        onSelect={onSelect}
-        enableCulling
-        pointSegments={pointResolution}
-      /> }
-      {data && selected !== null && (
-        <Text
-          message={selected.subreddit}
-          x={selected.x}
-          y={selected.y}
-          z={selected.z}
-          position={width < 500 ? Position.BOTTOM : Position.LEFT}
-        />
-      )}
-      <Effects />
-    </Canvas>
-  );
+      <Canvas camera={{position: [0, 0, 40], far: width * CLIP_SCALE_FACTOR}}>
+        <Stats/>
+          <Controls target={cameraTarget} position={cameraPosition}/>
+          <ambientLight color="#ffffff" intensity={0.1}/>
+          <hemisphereLight
+              color="#ffffff"
+              skyColor={new THREE.Color("#ffffbb")}
+              groundColor={new THREE.Color("#080820")}
+              intensity={1.0}
+          />
+        {clusters && <ClusterHulls clusters={clusters}/>}
+        {<InstancedPoints
+          data={data}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          enableCulling
+          pointSegments={pointResolution}
+        />}
+        {selected !== null && (
+          <Text
+            message={selected.subreddit}
+            x={selected.x}
+            y={selected.y}
+            z={selected.z}
+            position={width < 500 ? Position.BOTTOM : Position.LEFT}
+          />
+        )}
+        <Effects/>
+      </Canvas>)
 };
