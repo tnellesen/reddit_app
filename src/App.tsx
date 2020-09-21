@@ -48,7 +48,7 @@ const getMesh = (group: Group | Object3D): Mesh => {
   return new Mesh(geometry, material);
 };
 
-export const pointCounts = [10000, 25000, 50000, 100000];
+export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000, 1000000];
 
 export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
@@ -65,7 +65,7 @@ export default function App() {
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
 
   const [{ data, loading, error }] = useAxios(
-    `https://redditexplorer.com/GetData/start:1,stop:${pointCount},dim:3,n_clusters:10,method:kmeans,cluster_hulls:yes`
+    `https://redditexplorer.com/GetData/dataset:original,n_points:${pointCount}`
   );
 
   //const data = redditClusters ;
