@@ -5,7 +5,7 @@ import { MouseEvent, useThree, useFrame, Camera } from "react-three-fiber";
 import { Point } from "../App";
 import { Frustum, Matrix4, Vector3, InstancedBufferAttribute } from "three";
 import { SCALE_FACTOR, clusterColors } from "../constants";
-import { MutableRefObject } from "react";
+import {MutableRefObject, useEffect, useState} from "react";
 
 interface InstancedPointsProps {
   data: Point[];
@@ -17,6 +17,8 @@ interface InstancedPointsProps {
 
 const pointRadius = 1 * SCALE_FACTOR;
 
+// re-use for instance computations
+const scratchColor = new THREE.Color();
 const scratchObject3D = new THREE.Object3D();
 const scratchSphere = new THREE.Sphere();
 const scratchPos = new Vector3(0, 0, 0);
@@ -82,41 +84,8 @@ function updateInstancedMeshMatrices(
 }
 
 const SELECTED_COLOR = "#6f6";
-//const DEFAULT_COLOR = "#888";
 
-// re-use for instance computations
-const scratchColor = new THREE.Color();
 
-/*
-const useColors = (
-  data: Point[],
-  selectedId: SelectedId,
-  pointIndexToId: number[],
-  maxCount: number
-) => {
-  const numPoints = data.length;
-  const colorAttrib = React.useRef<THREE.InstancedBufferAttribute>();
-  const colorArray = React.useMemo(() => new Float32Array(numPoints * 3), [
-    numPoints
-  ]);
-
-  React.useEffect(() => {
-    for (let i = 0; i < maxCount; ++i) {
-      scratchColor.set(
-        data[i].id === selectedId
-          ? SELECTED_COLOR
-          : clusterColors[data[pointIndexToId[i]].cluster]
-      );
-      scratchColor.toArray(colorArray, i * 3);
-    }
-    if (colorAttrib.current) {
-      colorAttrib.current.needsUpdate = true;
-    }
-  }, [data, selectedId, colorArray, pointIndexToId, maxCount]);
-
-  return { colorAttrib, colorArray };
-};
-*/
 
 const updateColors = (
   data: Point[],
@@ -181,6 +150,8 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
   const pointIndexToId = data.map((point) => point.id);
 
   const meshRef = React.useRef<THREE.InstancedMesh>();
+  const [mesh, setMesh] = useState();
+  useEffect(() => void setMesh(meshRef.current), [data])
 
   const { camera } = useThree();
 
@@ -191,26 +162,10 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
     numPoints
   ]);
 
-  /*
-  React.useEffect(() => {
-    if (meshRef.current) {
-      updateInstancedMeshMatrices(
-        meshRef.current,
-        data,
-        enableCulling || false,
-        camera,
-        pointIndexToId,
-        colorArray,
-        selectedId
-      );
-    }
-  }, [data, camera, pointIndexToId, enableCulling, colorArray, selectedId]);
-  */
-
   useFrame(() => {
-    if (meshRef.current) {
+    if (mesh) {
       updateInstancedMeshMatrices(
-        meshRef.current,
+        mesh,
         data,
         numPoints,
         enableCulling || false,
@@ -223,13 +178,6 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
     }
   });
 
-  /*let { colorAttrib, colorArray } = useColors(
-    data,
-    selectedId,
-    pointIndexToId,
-    visibleInstanceCount
-  ); */
-
   const { handleClick, handlePointerDown } = useMousePointInteraction(
     selectedId,
     onSelect,
@@ -238,33 +186,31 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
 
   return (
     <>
-      {data &&
-        <instancedMesh
-            ref={meshRef}
-            args={[
-              // TODO sort out the bugged typing here.
-              // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
-              (null as unknown) as THREE.BufferGeometry,
-              (null as unknown) as THREE.Material,
-              numPoints
-            ]}
-            onPointerUp={handleClick}
-            onPointerDown={handlePointerDown}
-        >
-            <sphereBufferGeometry
-                attach="geometry"
-                args={[pointRadius, pointSegments, pointSegments]}
-                key={pointSegments}
-            >
-                <instancedBufferAttribute
-                    ref={colorAttrib}
-                    attachObject={["attributes", "color"]}
-                    args={[colorArray, 3]}
-                />
-            </sphereBufferGeometry>
-            <meshStandardMaterial attach="material" vertexColors/>
-        </instancedMesh>
-      }
+      <instancedMesh
+          ref={meshRef}
+          args={[
+            // TODO sort out the bugged typing here.
+            // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
+            (null as unknown) as THREE.BufferGeometry,
+            (null as unknown) as THREE.Material,
+            numPoints
+          ]}
+          onPointerUp={handleClick}
+          onPointerDown={handlePointerDown}
+      >
+          <sphereBufferGeometry
+              attach="geometry"
+              args={[pointRadius, pointSegments, pointSegments]}
+              key={pointSegments}
+          >
+              <instancedBufferAttribute
+                  ref={colorAttrib}
+                  attachObject={["attributes", "color"]}
+                  args={[colorArray, 3]}
+              />
+          </sphereBufferGeometry>
+          <meshStandardMaterial attach="material" vertexColors/>
+      </instancedMesh>
       {selectedId !== null && (
         <group
           position={[
