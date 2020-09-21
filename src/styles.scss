@@ -44,6 +44,11 @@ div {
         float: right;
       }
     }
+
+    .error-message {
+      color: white;
+      font-size: 10em;
+    }
   }
 
   @media only screen and (max-width: $mobileBreakpoint) {

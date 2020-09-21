@@ -133,7 +133,7 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
   React.useEffect(() => {
     let numEmptyVoxels = 0;
     for (let i = 0; i < voxels.length; ++i) {
-      if (voxels.length > 0) {
+      if (voxels[i].length > 0) {
         const mesh = meshRefs.current[i];
         const points = voxels[i].map(p => new Vector3(p.x, p.y, p.z));
 
@@ -162,10 +162,10 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
       else {
         numEmptyVoxels++;
       }
-      console.log("Total Voxels: ", voxels.length);
-      console.log("Empty Voxels: ", numEmptyVoxels);
-      console.log("Percent Empty Voxels ",numEmptyVoxels/voxels.length);
     }
+    console.log("Total Voxels: ", voxels.length);
+    console.log("Empty Voxels: ", numEmptyVoxels);
+    console.log("Percent Empty Voxels ", (numEmptyVoxels/voxels.length) * 100);
   }, [voxels]);
   
   const sharedMaterial = new THREE.MeshStandardMaterial()

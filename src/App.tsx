@@ -136,7 +136,7 @@ export default function App() {
   return (
     <div className="App">
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
-      {error && <span>{error}</span>}
+      {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
         <ViewportProvider key={redditData.length}>
           <div className="vis-container">
