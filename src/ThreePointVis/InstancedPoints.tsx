@@ -15,7 +15,7 @@ interface InstancedPointsProps {
   pointSegments: number;
 }
 
-const pointRadius = 1 * SCALE_FACTOR;
+const pointRadius = 1.0 * SCALE_FACTOR;
 
 // re-use for instance computations
 const scratchColor = new THREE.Color();
