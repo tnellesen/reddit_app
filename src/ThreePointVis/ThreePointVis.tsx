@@ -10,6 +10,7 @@ import { ClusterHulls } from "./ClusterHulls";
 import { Cluster, Point } from "../App";
 import { useViewport } from "../ViewportHooks";
 import { CLIP_SCALE_FACTOR } from "../constants";
+import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 
 export type SelectedId = number | null;
 export type SelectHandler = (
@@ -22,10 +23,11 @@ interface ThreePointVisProps {
   selectedId: SelectedId;
   onSelect: SelectHandler;
   pointResolution: number;
+  voxelResolution: number;
 }
 
 export const ThreePointVis = (props: ThreePointVisProps) => {
-  const { data, clusters, selectedId, onSelect, pointResolution } = props;
+  const { data, clusters, selectedId, onSelect, pointResolution, voxelResolution } = props;
 
   const selected =
     selectedId !== null && data[selectedId].include ? data[selectedId] : null;
@@ -54,13 +56,21 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
               intensity={1.0}
           />
         {clusters && <ClusterHulls clusters={clusters}/>}
-        {<InstancedPoints
-          data={data}
-          selectedId={selectedId}
-          onSelect={onSelect}
-          enableCulling
-          pointSegments={pointResolution}
-        />}
+        {voxelResolution <= 1
+          ? <InstancedPoints
+            data={data}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            enableCulling
+            pointSegments={pointResolution}
+          />
+          : <VoxelInstancedPoints
+            data={data}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            pointSegments={pointResolution}
+            voxelResolution={voxelResolution}
+          />}
         {selected !== null && (
           <Text
             message={selected.subreddit}

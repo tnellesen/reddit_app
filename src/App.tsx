@@ -146,6 +146,7 @@ export default function App() {
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 pointResolution={pointResolution}
+                voxelResolution={Math.max(6, Math.floor(Math.cbrt(redditData.length/80)))}
               />
             )
           </div>
