@@ -48,7 +48,7 @@ const getMesh = (group: Group | Object3D): Mesh => {
   return new Mesh(geometry, material);
 };
 
-export const pointCounts = [10000, 25000, 50000];
+export const pointCounts = [10000, 25000, 50000, 100000];
 
 export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
@@ -146,6 +146,7 @@ export default function App() {
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 pointResolution={pointResolution}
+                voxelResolution={Math.max(6, Math.floor(Math.cbrt(redditData.length/80)))}
               />
             )
           </div>

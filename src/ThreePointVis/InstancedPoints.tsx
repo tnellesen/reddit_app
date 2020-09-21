@@ -61,7 +61,6 @@ function updateInstancedMeshMatrices(
       }
 
       scratchObject3D.position.set(x, y, z);
-      scratchObject3D.rotation.set(Math.PI * 0.5, 0, 0);
       scratchObject3D.updateMatrix();
       mesh.setMatrixAt(visibleInstanceCount, scratchObject3D.matrix);
       pointIndexToId[visibleInstanceCount] = data[i].id;

@@ -17,7 +17,6 @@ export function ClusterHulls(props: ClusterHullsProps) {
           name={`hull-${cluster.id}`}
           key={`hull-${cluster.id}`}
           visible
-          //geometry={cluster.obj.geometry}
         >
           <bufferGeometry attach="geometry" {...cluster.obj.geometry} />
           <meshBasicMaterial
