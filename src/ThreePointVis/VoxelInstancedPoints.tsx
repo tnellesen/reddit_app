@@ -131,31 +131,40 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
   const scratchObject3D = new THREE.Object3D();
 
   React.useEffect(() => {
+    let numEmptyVoxels = 0;
     for (let i = 0; i < voxels.length; ++i) {
-      const mesh = meshRefs.current[i];
-      const points = voxels[i].map(p => new Vector3(p.x, p.y, p.z));
+      if (voxels.length > 0) {
+        const mesh = meshRefs.current[i];
+        const points = voxels[i].map(p => new Vector3(p.x, p.y, p.z));
 
-      if(mesh) {
-        mesh.matrixAutoUpdate = false; // TODO try for clusters
-        mesh.updateMatrix();
+        if(mesh) {
+          mesh.matrixAutoUpdate = false; // TODO try for clusters
+          mesh.updateMatrix();
 
-        // set the transform matrix for each instance
-        for (let j = 0; j < points.length; ++j) {
-          const x = points[j].x;
-          const y = points[j].y;
-          const z = points[j].z;
+          // set the transform matrix for each instance
+          for (let j = 0; j < points.length; ++j) {
+            const x = points[j].x;
+            const y = points[j].y;
+            const z = points[j].z;
 
-          scratchObject3D.position.set(x, y, z);
-          scratchObject3D.updateMatrix();
-          mesh.setMatrixAt(j, scratchObject3D.matrix);
+            scratchObject3D.position.set(x, y, z);
+            scratchObject3D.updateMatrix();
+            mesh.setMatrixAt(j, scratchObject3D.matrix);
+          }
+
+          const boundingBox = new THREE.Box3().setFromPoints(points);
+          const center = boundingBox.getCenter(new THREE.Vector3());
+          mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points, center);
+          mesh.instanceMatrix.needsUpdate = true;
+          mesh.frustumCulled = true;
         }
-
-        const boundingBox = new THREE.Box3().setFromPoints(points);
-        const center = boundingBox.getCenter(new THREE.Vector3());
-        mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points, center);
-        mesh.instanceMatrix.needsUpdate = true;
-        mesh.frustumCulled = true;
       }
+      else {
+        numEmptyVoxels++;
+      }
+      console.log("Total Voxels: ", voxels.length);
+      console.log("Empty Voxels: ", numEmptyVoxels);
+      console.log("Percent Empty Voxels ",numEmptyVoxels/voxels.length);
     }
   }, [voxels]);
   
@@ -164,37 +173,39 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
   return (
     <>
       {voxels.map((voxel, index) =>
-        <instancedMesh
-            key={index}
-            ref={(mesh : THREE.InstancedMesh) => meshRefs.current[index] = mesh}
-            args={[
-              // TODO sort out the bugged typing here.
-              // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
-              (null as unknown) as THREE.BufferGeometry,
-              (null as unknown) as THREE.Material,
-              voxel.length
-            ]}
-            geometry={new THREE.SphereBufferGeometry(pointRadius, pointSegments, pointSegments)}
-            material={sharedMaterial}
-            onPointerUp={handleClick}
-            onPointerDown={handlePointerDown}
+        voxel.length > 0
+          ? <instancedMesh
+              key={index}
+              ref={(mesh : THREE.InstancedMesh) => meshRefs.current[index] = mesh}
+              args={[
+                // TODO sort out the bugged typing here.
+                // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
+                (null as unknown) as THREE.BufferGeometry,
+                (null as unknown) as THREE.Material,
+                voxel.length
+              ]}
+              geometry={new THREE.SphereBufferGeometry(pointRadius, pointSegments, pointSegments)}
+              material={sharedMaterial}
+              onPointerUp={handleClick}
+              onPointerDown={handlePointerDown}
 
-        >
-          {/*
-            <sphereBufferGeometry
-                attach="geometry"
-                args={[pointRadius, pointSegments, pointSegments]}
-                key={pointSegments}
-            >
-              *<instancedBufferAttribute
-                    ref={colorAttrib}
-                    attachObject={["attributes", "color"]}
-                    args={[colorArray, 3]}
-                />
-            </sphereBufferGeometry>
-            <meshStandardMaterial attach="material"/>
-            */}
-        </instancedMesh>
+          >
+            {/*
+              <sphereBufferGeometry
+                  attach="geometry"
+                  args={[pointRadius, pointSegments, pointSegments]}
+                  key={pointSegments}
+              >
+                *<instancedBufferAttribute
+                      ref={colorAttrib}
+                      attachObject={["attributes", "color"]}
+                      args={[colorArray, 3]}
+                  />
+              </sphereBufferGeometry>
+              <meshStandardMaterial attach="material"/>
+              */}
+          </instancedMesh>
+          : null
       )}
       {selectedId !== null && (
         <group
