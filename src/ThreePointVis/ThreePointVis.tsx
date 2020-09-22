@@ -6,7 +6,7 @@ import { InstancedPoints } from "./InstancedPoints";
 import { Stats } from "./Stats";
 import { Effects } from "./Effects";
 import { Text, Position } from "./Text";
-import { ClusterHulls } from "./ClusterHulls";
+//import { ClusterHulls } from "./ClusterHulls";
 import { Cluster, Point } from "../App";
 import { useViewport } from "../ViewportHooks";
 import { CLIP_SCALE_FACTOR } from "../constants";
@@ -27,7 +27,7 @@ interface ThreePointVisProps {
 }
 
 export const ThreePointVis = (props: ThreePointVisProps) => {
-  const { data, clusters, selectedId, onSelect, pointResolution, voxelResolution } = props;
+  const { data, selectedId, onSelect, pointResolution, voxelResolution } = props;
 
   const selected =
     selectedId !== null && data[selectedId].include ? data[selectedId] : null;
@@ -42,10 +42,10 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
       ? new THREE.Vector3(selected.x, selected.y, selected.z)
       : null;
 
-  const { width } = useViewport();
+  const { width, height } = useViewport();
 
   return (
-      <Canvas camera={{position: [0, 0, 40], far: width * CLIP_SCALE_FACTOR}}>
+      <Canvas camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}>
         <Stats/>
           <Controls target={cameraTarget} position={cameraPosition}/>
           <ambientLight color="#ffffff" intensity={0.1}/>
@@ -55,7 +55,7 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
               groundColor={new THREE.Color("#080820")}
               intensity={1.0}
           />
-        {clusters && <ClusterHulls clusters={clusters}/>}
+        {/*clusters && <ClusterHulls clusters={clusters}/> */}
         {voxelResolution <= 1
           ? <InstancedPoints
             data={data}

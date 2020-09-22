@@ -49,6 +49,7 @@ const updateColors = (
 const useMousePointInteraction = (
   selectedId: SelectedId,
   onSelect: SelectHandler,
+  voxels: Point[][]
 ) => {
   // track mousedown position to skip click handlers on drags
   const mouseDownRef = React.useRef([0, 0]);
@@ -58,22 +59,29 @@ const useMousePointInteraction = (
   };
 
   const handleClick = (event: MouseEvent) => {
-    const { instanceId, clientX, clientY } = event;
-    const downDistance = Math.sqrt(
-      Math.pow(mouseDownRef.current[0] - clientX, 2) +
+    const { instanceId, object, clientX, clientY } = event;
+
+    if(instanceId !== null && instanceId !== undefined) {
+      const voxelId = object.userData.voxelId;
+
+      const pointId = voxels[voxelId][instanceId].id;
+
+        const downDistance = Math.sqrt(
+        Math.pow(mouseDownRef.current[0] - clientX, 2) +
         Math.pow(mouseDownRef.current[1] - clientY, 2)
-    );
+      );
 
-    // skip click if we dragged more than 5px distance
-    if (downDistance > 5) {
-      event.stopPropagation();
-      return;
-    }
+      // skip click if we dragged more than 5px distance
+      if (downDistance > 10) {
+        event.stopPropagation();
+        return;
+      }
 
-    if (instanceId === selectedId) {
-      onSelect(null);
-    } else if (instanceId || instanceId === 0) {
-      onSelect(instanceId);
+      if (pointId === selectedId) {
+        onSelect(null);
+      } else if (pointId || pointId === 0) {
+        onSelect(pointId);
+      }
     }
   };
 
@@ -125,6 +133,7 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
   const { handleClick, handlePointerDown } = useMousePointInteraction(
     selectedId,
     onSelect,
+    voxels
   );
 
   // re-use for instance computations
@@ -155,6 +164,9 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
           const boundingBox = new THREE.Box3().setFromPoints(points);
           const center = boundingBox.getCenter(new THREE.Vector3());
           mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points, center);
+          mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, pointRadius);
+          console.log(points);
+          console.log(mesh.geometry.boundingSphere);
           mesh.instanceMatrix.needsUpdate = true;
           mesh.frustumCulled = true;
         }
@@ -167,8 +179,6 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
     console.log("Empty Voxels: ", numEmptyVoxels);
     console.log("Percent Empty Voxels ", (numEmptyVoxels/voxels.length) * 100);
   }, [voxels]);
-  
-  const sharedMaterial = new THREE.MeshStandardMaterial()
 
   return (
     <>
@@ -176,6 +186,7 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
         voxel.length > 0
           ? <instancedMesh
               key={index}
+              userData={{voxelId: index}}
               ref={(mesh : THREE.InstancedMesh) => meshRefs.current[index] = mesh}
               args={[
                 // TODO sort out the bugged typing here.
@@ -184,26 +195,21 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
                 (null as unknown) as THREE.Material,
                 voxel.length
               ]}
-              geometry={new THREE.SphereBufferGeometry(pointRadius, pointSegments, pointSegments)}
-              material={sharedMaterial}
               onPointerUp={handleClick}
               onPointerDown={handlePointerDown}
-
           >
-            {/*
               <sphereBufferGeometry
                   attach="geometry"
                   args={[pointRadius, pointSegments, pointSegments]}
                   key={pointSegments}
               >
-                *<instancedBufferAttribute
+                {/*<instancedBufferAttribute
                       ref={colorAttrib}
                       attachObject={["attributes", "color"]}
                       args={[colorArray, 3]}
-                  />
+                  /> */}
               </sphereBufferGeometry>
-              <meshStandardMaterial attach="material"/>
-              */}
+            <meshStandardMaterial attach="material"/>
           </instancedMesh>
           : null
       )}
