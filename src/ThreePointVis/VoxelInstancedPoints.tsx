@@ -178,41 +178,42 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
     console.log("Total Voxels: ", voxels.length);
     console.log("Empty Voxels: ", numEmptyVoxels);
     console.log("Percent Empty Voxels ", (numEmptyVoxels/voxels.length) * 100);
-  }, [voxels]);
+  }, [voxels, scratchObject3D]);
 
   return (
     <>
-      {voxels.map((voxel, index) =>
-        voxel.length > 0
-          ? <instancedMesh
-              key={index}
-              userData={{voxelId: index}}
-              ref={(mesh : THREE.InstancedMesh) => meshRefs.current[index] = mesh}
-              args={[
-                // TODO sort out the bugged typing here.
-                // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
-                (null as unknown) as THREE.BufferGeometry,
-                (null as unknown) as THREE.Material,
-                voxel.length
-              ]}
-              onPointerUp={handleClick}
-              onPointerDown={handlePointerDown}
-          >
-              <sphereBufferGeometry
-                  attach="geometry"
-                  args={[pointRadius, pointSegments, pointSegments]}
-                  key={pointSegments}
-              >
-                {/*<instancedBufferAttribute
-                      ref={colorAttrib}
-                      attachObject={["attributes", "color"]}
-                      args={[colorArray, 3]}
-                  /> */}
-              </sphereBufferGeometry>
-            <meshStandardMaterial attach="material"/>
-          </instancedMesh>
-          : null
-      )}
+      <group onPointerUp={handleClick}
+             onPointerDown={handlePointerDown}>
+        {voxels.map((voxel, index) =>
+          voxel.length > 0
+            ? <instancedMesh
+                key={index}
+                userData={{voxelId: index}}
+                ref={(mesh : THREE.InstancedMesh) => meshRefs.current[index] = mesh}
+                args={[
+                  // TODO sort out the bugged typing here.
+                  // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
+                  (null as unknown) as THREE.BufferGeometry,
+                  (null as unknown) as THREE.Material,
+                  voxel.length
+                ]}
+            >
+                <sphereBufferGeometry
+                    attach="geometry"
+                    args={[pointRadius, pointSegments, pointSegments]}
+                    key={pointSegments}
+                >
+                  {/*<instancedBufferAttribute
+                        ref={colorAttrib}
+                        attachObject={["attributes", "color"]}
+                        args={[colorArray, 3]}
+                    /> */}
+                </sphereBufferGeometry>
+              <meshStandardMaterial attach="material"/>
+            </instancedMesh>
+            : null
+        )}
+        </group>
       {selectedId !== null && (
         <group
           position={[
