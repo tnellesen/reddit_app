@@ -1,26 +1,20 @@
 import * as React from "react";
 import * as THREE from "three";
-import { SelectedId, SelectHandler } from "./ThreePointVis";
-import { MouseEvent, } from "react-three-fiber";
 import { Point } from "../App";
-import { SCALE_FACTOR } from "../constants";
-import {Vector3} from "three";
+import {POINT_RADIUS} from "../constants";
+import {Object3D, Vector3} from "three";
+import {useMemo} from "react";
 
 interface VoxelInstancedPointsProps {
   data: Point[];
-  selectedId: SelectedId;
-  onSelect: SelectHandler;
   pointSegments: number;
   voxelResolution: number;
 }
 
-const pointRadius = 1 * SCALE_FACTOR;
 const gridScale = 1001;
 
 // re-use for instance computations
 //const scratchColor = new THREE.Color();
-
-const SELECTED_COLOR = "#6f6";
 
 
 /*
@@ -46,50 +40,8 @@ const updateColors = (
 };
 */
 
-const useMousePointInteraction = (
-  selectedId: SelectedId,
-  onSelect: SelectHandler,
-  voxels: Point[][]
-) => {
-  // track mousedown position to skip click handlers on drags
-  const mouseDownRef = React.useRef([0, 0]);
-  const handlePointerDown = (event: MouseEvent) => {
-    mouseDownRef.current[0] = event.clientX;
-    mouseDownRef.current[1] = event.clientY;
-  };
-
-  const handleClick = (event: MouseEvent) => {
-    const { instanceId, object, clientX, clientY } = event;
-
-    if(instanceId !== null && instanceId !== undefined) {
-      const voxelId = object.userData.voxelId;
-
-      const pointId = voxels[voxelId][instanceId].id;
-
-        const downDistance = Math.sqrt(
-        Math.pow(mouseDownRef.current[0] - clientX, 2) +
-        Math.pow(mouseDownRef.current[1] - clientY, 2)
-      );
-
-      // skip click if we dragged more than 5px distance
-      if (downDistance > 10) {
-        event.stopPropagation();
-        return;
-      }
-
-      if (pointId === selectedId) {
-        onSelect(null);
-      } else if (pointId || pointId === 0) {
-        onSelect(pointId);
-      }
-    }
-  };
-
-  return { handlePointerDown, handleClick };
-};
-
 export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
-  const { data, selectedId, onSelect, pointSegments, voxelResolution } = props;
+  const { data, pointSegments, voxelResolution } = props;
 
   const [voxels, setVoxels] = React.useState<Point[][]>([]);
 
@@ -130,14 +82,8 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
   ]);
   */
 
-  const { handleClick, handlePointerDown } = useMousePointInteraction(
-    selectedId,
-    onSelect,
-    voxels
-  );
-
   // re-use for instance computations
-  const scratchObject3D = new THREE.Object3D();
+  const scratchObject3D = useMemo(() => new Object3D(), []);
 
   React.useEffect(() => {
     let numEmptyVoxels = 0;
@@ -164,9 +110,9 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
           const boundingBox = new THREE.Box3().setFromPoints(points);
           const center = boundingBox.getCenter(new THREE.Vector3());
           mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points, center);
-          mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, pointRadius);
-          console.log(points);
-          console.log(mesh.geometry.boundingSphere);
+          mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, POINT_RADIUS);
+          //console.log(points);
+          //console.log(mesh.geometry.boundingSphere);
           mesh.instanceMatrix.needsUpdate = true;
           mesh.frustumCulled = true;
         }
@@ -182,8 +128,6 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
 
   return (
     <>
-      <group onPointerUp={handleClick}
-             onPointerDown={handlePointerDown}>
         {voxels.map((voxel, index) =>
           voxel.length > 0
             ? <instancedMesh
@@ -200,7 +144,7 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
             >
                 <sphereBufferGeometry
                     attach="geometry"
-                    args={[pointRadius, pointSegments, pointSegments]}
+                    args={[POINT_RADIUS, pointSegments, pointSegments]}
                     key={pointSegments}
                 >
                   {/*<instancedBufferAttribute
@@ -213,30 +157,6 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
             </instancedMesh>
             : null
         )}
-        </group>
-      {selectedId !== null && (
-        <group
-          position={[
-            data[selectedId].x,
-            data[selectedId].y,
-            data[selectedId].z
-          ]}
-        >
-          <pointLight
-            distance={19 * SCALE_FACTOR}
-            position={[0, 0, 0]}
-            intensity={2.5}
-            decay={30}
-            color={SELECTED_COLOR}
-          />
-          <pointLight
-            distance={10 * SCALE_FACTOR}
-            position={[0, 0, 0]}
-            intensity={1.5}
-            decay={1}
-            color={SELECTED_COLOR}
-          />
-        </group>
       )}
     </>
   );
