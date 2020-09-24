@@ -2,9 +2,8 @@ import * as React from "react";
 import * as THREE from "three";
 import { Controls } from "./Controls";
 import { InstancedPoints } from "./InstancedPoints";
-import { Effects } from "./Effects";
 import { Text, Position } from "./Text";
-//import { ClusterHulls } from "./ClusterHulls";
+//import { ClusterHulls } from "./ClusterHulls"
 import { Cluster, Point } from "../App";
 import { useWindowSize} from "../ViewportHooks";
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
@@ -76,6 +75,5 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
             position={width < 500 ? Position.BOTTOM : Position.LEFT}
           />
         )}
-        <Effects/>
       </>)
 };
