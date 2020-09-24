@@ -7,7 +7,7 @@ import {
   Mesh,
   Object3D,
   BoxBufferGeometry,
-  MeshBasicMaterial, WebGLRenderer
+  MeshBasicMaterial
 } from "three";
 import {useWindowSize} from "./ViewportHooks";
 import useAxios from "axios-hooks";
@@ -16,7 +16,7 @@ import {CLIP_SCALE_FACTOR} from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Canvas} from "react-three-fiber";
 import {Effects} from "./ThreePointVis/Effects";
-import {DebugStats} from "./ThreePointVis/DebugStats";
+//import {DebugStats} from "./ThreePointVis/DebugStats";
 
 export interface Point {
   id: number;
@@ -67,7 +67,7 @@ export default function App() {
     Math.max(Math.min(Math.floor(window.innerWidth / 50), 32), 1)
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
-  const [glContext, setGlContext] = React.useState<WebGLRenderer>();
+  //const [glContext, setGlContext] = React.useState<WebGLRenderer>();
 
   const [{ data, loading, error }] = useAxios(
     `https://redditexplorer.com/GetData/dataset:original,n_points:${pointCount}`
@@ -138,13 +138,15 @@ export default function App() {
 
   const { width, height } = useWindowSize();
 
+  console.log(width * height * CLIP_SCALE_FACTOR);
+
   return (
     <div className="App">
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
           <div className="vis-container" key={redditData.length}>]
-            <Canvas concurrent camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}} onCreated={({ gl }) => setGlContext(gl)}>
+            <Canvas concurrent camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}>
               <Stats/>
               <Effects/>
                   <ThreePointVis
@@ -243,7 +245,7 @@ export default function App() {
                 </select>
               </div>
             </form>
-            {glContext && <DebugStats gl={glContext}/>}
+            {/*glContext && <DebugStats gl={glContext}/> */}
           </>
         )}
       </div>
