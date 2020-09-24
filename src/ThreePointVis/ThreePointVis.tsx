@@ -1,16 +1,13 @@
 import * as React from "react";
 import * as THREE from "three";
 import { Controls } from "./Controls";
-import { Canvas } from "react-three-fiber";
 import { InstancedPoints } from "./InstancedPoints";
-import { Stats } from "./Stats";
-import { Effects } from "./Effects";
 import { Text, Position } from "./Text";
-//import { ClusterHulls } from "./ClusterHulls";
+//import { ClusterHulls } from "./ClusterHulls"
 import { Cluster, Point } from "../App";
-import { useViewport } from "../ViewportHooks";
-import { CLIP_SCALE_FACTOR } from "../constants";
+import { useWindowSize} from "../ViewportHooks";
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
+import {SCALE_FACTOR} from "../constants";
 
 export type SelectedId = number | null;
 export type SelectHandler = (
@@ -29,6 +26,8 @@ interface ThreePointVisProps {
 export const ThreePointVis = (props: ThreePointVisProps) => {
   const { data, selectedId, onSelect, pointResolution, voxelResolution } = props;
 
+  const SELECTED_COLOR = "#6f6";
+
   const selected =
     selectedId !== null && data[selectedId].include ? data[selectedId] : null;
 
@@ -42,32 +41,29 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
       ? new THREE.Vector3(selected.x, selected.y, selected.z)
       : null;
 
-  const { width, height } = useViewport();
-
+  const { width } = useWindowSize();
+    
   return (
-      <Canvas camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}>
-        <Stats/>
-          <Controls target={cameraTarget} position={cameraPosition}/>
-          <ambientLight color="#ffffff" intensity={0.1}/>
-          <hemisphereLight
-              color="#ffffff"
-              skyColor={new THREE.Color("#ffffbb")}
-              groundColor={new THREE.Color("#080820")}
-              intensity={1.0}
-          />
+      <>
+        <Controls target={cameraTarget} position={cameraPosition}/>
+        <ambientLight color="#ffffff" intensity={0.1}/>
+        <hemisphereLight
+            color="#ffffff"
+            skyColor={new THREE.Color("#ffffbb")}
+            groundColor={new THREE.Color("#080820")}
+            intensity={1.0}
+        />
         {/*clusters && <ClusterHulls clusters={clusters}/> */}
         {voxelResolution <= 1
           ? <InstancedPoints
-            data={data}
             selectedId={selectedId}
             onSelect={onSelect}
+            data={data}
             enableCulling
             pointSegments={pointResolution}
           />
           : <VoxelInstancedPoints
             data={data}
-            selectedId={selectedId}
-            onSelect={onSelect}
             pointSegments={pointResolution}
             voxelResolution={voxelResolution}
           />}
@@ -80,6 +76,28 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
             position={width < 500 ? Position.BOTTOM : Position.LEFT}
           />
         )}
-        <Effects/>
-      </Canvas>)
+        {selectedId !== null && (
+          <group
+            position={[
+              data[selectedId].x,
+              data[selectedId].y,
+              data[selectedId].z
+            ]}
+          >
+            <pointLight
+              distance={19 * SCALE_FACTOR}
+              position={[0, 0, 0]}
+              intensity={2.5}
+              decay={30}
+              color={SELECTED_COLOR}
+            />
+            <pointLight
+              distance={10 * SCALE_FACTOR}
+              position={[0, 0, 0]}
+              intensity={1.5}
+              decay={1}
+              color={SELECTED_COLOR}
+            />
+          </group>)}
+      </>)
 };

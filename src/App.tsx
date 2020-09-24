@@ -1,18 +1,25 @@
 import * as React from "react";
 import { ThreePointVis } from "./ThreePointVis/ThreePointVis";
 import "./styles.scss";
-//import redditClusters from "../data/redditClusters.json";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import {
   Group,
   Mesh,
   Object3D,
   BoxBufferGeometry,
-  MeshBasicMaterial
+  MeshBasicMaterial, Sphere, Vector3
 } from "three";
-import { ViewportProvider } from "./ViewportHooks";
+import {useWindowSize} from "./ViewportHooks";
 import useAxios from "axios-hooks";
 import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
+import {CLIP_SCALE_FACTOR, POINT_RADIUS} from "./constants";
+import {Stats} from "./ThreePointVis/Stats";
+import {Canvas} from "react-three-fiber";
+import {Effects} from "./ThreePointVis/Effects";
+import * as THREE from "three";
+import {CollisionSphere} from "./CollisionSphere";
+import {useMemo} from "react";
+//import {DebugStats} from "./ThreePointVis/DebugStats";
 
 export interface Point {
   id: number;
@@ -63,12 +70,12 @@ export default function App() {
     Math.max(Math.min(Math.floor(window.innerWidth / 50), 32), 1)
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
+  const [usePostProcessing, setUsePostProcessing] = React.useState(true);
+  const [camera, setCamera] = React.useState();
 
   const [{ data, loading, error }] = useAxios(
     `https://redditexplorer.com/GetData/dataset:original,n_points:${pointCount}`
   );
-
-  //const data = redditClusters ;
 
   React.useEffect(() => {
     const newData = data
@@ -133,24 +140,88 @@ export default function App() {
     });
   };
 
+  const { width, height } = useWindowSize();
+
+  console.log(width * height * CLIP_SCALE_FACTOR);
+
+  const mouseDownRef = React.useRef([0, 0]);
+  const raycaster = new THREE.Raycaster();
+  raycaster.params = {Points: { threshold: POINT_RADIUS * 0.01 }};
+
+  const collisionGeometry = useMemo(() => {
+    return redditData.map(point => {
+        const sphere = new Sphere (new Vector3(point.x, point.y, point.z), POINT_RADIUS);
+        const collisionSphere = new CollisionSphere(sphere, point.id);
+        return collisionSphere;
+      }
+    )
+  }, [redditData]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    mouseDownRef.current[0] = event.clientX;
+    mouseDownRef.current[1] = event.clientY;
+  };
+
+  const handleClick = (event: React.PointerEvent<HTMLDivElement>) => {
+    const {clientX, clientY} = event;
+    const downDistance = Math.sqrt(
+      Math.pow(mouseDownRef.current[0] - clientX, 2) +
+      Math.pow(mouseDownRef.current[1] - clientY, 2)
+    );
+
+    // skip click if we dragged more than 5px distance
+    if (downDistance > 5) {
+      event.stopPropagation();
+      return;
+    }
+    const mouse = {
+      x: ( event.clientX / window.innerWidth ) * 2 - 1,
+      y: -( event.clientY / window.innerHeight ) * 2 + 1
+    }
+
+    raycaster.setFromCamera(mouse, camera);
+    console.log(camera?.position, camera?.rotation);
+    const intersects = raycaster.intersectObjects(collisionGeometry);
+
+    if (intersects.length > 0) {
+      const intersected = intersects[0].object as CollisionSphere;
+      if (selectedId !== intersected.index) {
+        setSelectedId(intersected.index);
+        //console.log("Index: ", intersected.index);
+        //console.log("Point: ", data[intersected.index]);
+      }
+      else {
+        setSelectedId(null);
+      }
+    }
+  }
+
   return (
     <div className="App">
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
-        <ViewportProvider key={redditData.length}>
-          <div className="vis-container">
-              <ThreePointVis
-                data={redditData}
-                clusters={clusters}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                pointResolution={pointResolution}
-                voxelResolution={Math.max(6, Math.floor(Math.cbrt(redditData.length/80)))}
-              />
-            )
-          </div>
-        </ViewportProvider>)
+          <div className="vis-container" key={redditData.length}>
+            <Canvas concurrent
+                    camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}
+                    onCreated={gl => setCamera(gl.camera)}
+                    onPointerDown={handlePointerDown}
+                    onPointerUp={handleClick}>
+              <Stats/>
+              {usePostProcessing && <Effects useAA useUnrealBloom />}
+                  <ThreePointVis
+                    data={redditData}
+                    clusters={clusters}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    pointResolution={pointResolution}
+                    voxelResolution={Math.max(6,
+                      Math.min(12,
+                        Math.floor(Math.cbrt(redditData.length/100))))}
+                  />
+                )
+            </Canvas>
+          </div>)
       }
       <div className="controls">
         <div className="controls-title-bar">
@@ -219,6 +290,16 @@ export default function App() {
                   value={maxPercentNSFW}
                   onChange={(event) => setMaxPercentNSFW(+event.target.value)}
                 />
+                <br />
+                <label htmlFor="usePostProcessing">
+                  Enable Post FX:
+                </label>
+                <input
+                  id="usePostProcessing"
+                  type="checkbox"
+                  checked={usePostProcessing}
+                  onChange={(event) => setUsePostProcessing(event.target.checked)}
+                />
               </div>
               <div>
                 <label htmlFor="numClusters" ># Clusters: </label>
@@ -236,6 +317,7 @@ export default function App() {
                 </select>
               </div>
             </form>
+            {/*glContext && <DebugStats gl={glContext}/> */}
           </>
         )}
       </div>

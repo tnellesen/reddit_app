@@ -4,7 +4,7 @@ import { SelectedId, SelectHandler } from "./ThreePointVis";
 import { MouseEvent, useThree, useFrame, Camera } from "react-three-fiber";
 import { Point } from "../App";
 import { Frustum, Matrix4, Vector3, InstancedBufferAttribute } from "three";
-import { SCALE_FACTOR, clusterColors } from "../constants";
+import {SCALE_FACTOR, clusterColors, POINT_RADIUS} from "../constants";
 import {MutableRefObject, useEffect, useState} from "react";
 
 interface InstancedPointsProps {
@@ -14,8 +14,6 @@ interface InstancedPointsProps {
   enableCulling?: boolean;
   pointSegments: number;
 }
-
-const pointRadius = 1.0 * SCALE_FACTOR;
 
 // re-use for instance computations
 const scratchColor = new THREE.Color();
@@ -51,7 +49,7 @@ function updateInstancedMeshMatrices(
 
       scratchPos.set(x, y, z);
 
-      scratchSphere.set(scratchPos, pointRadius);
+      scratchSphere.set(scratchPos, POINT_RADIUS);
 
       if (
         (!frustum.intersectsSphere(scratchSphere) && enableCulling) ||
@@ -199,7 +197,7 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
       >
           <sphereBufferGeometry
               attach="geometry"
-              args={[pointRadius, pointSegments, pointSegments]}
+              args={[POINT_RADIUS, pointSegments, pointSegments]}
               key={pointSegments}
           >
               <instancedBufferAttribute
