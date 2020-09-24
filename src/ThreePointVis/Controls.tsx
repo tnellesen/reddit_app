@@ -29,6 +29,9 @@ export const Controls = (props: ControlsProps) => {
 
   const keyPressed: { [key: string]: number } = {};
 
+  let targetAnimationComplete = false;
+  let positionAnimationComplete = false;
+
   const handleKeyDown = (event: KeyboardEvent) => {
     if (!keyPressed[event.key]) {
       keyPressed[event.key] = new Date().getTime();
@@ -45,20 +48,28 @@ export const Controls = (props: ControlsProps) => {
     const internalPosition = camera.position;
 
     // interpolate target
-    //const currentTarget = controls.current?.target || origin;
-    if (target && internalTarget.distanceTo(target) > TARGET_THRESHOLD) {
+    if ( !targetAnimationComplete
+      && target
+      && internalTarget.distanceTo(target) > TARGET_THRESHOLD) {
       internalTarget.lerp(target, ANIMATION_SPEED * delta);
+    }
+    else {
+      targetAnimationComplete = true;
     }
 
     if (
-      position &&
-      target &&
-      internalTarget.distanceTo(target) <
-        TARGET_THRESHOLD * TARGET_THRESHOLD_MULTIPLIER &&
-      internalPosition.distanceTo(position) > POSITION_THRESHOLD
+      !positionAnimationComplete
+      && position
+      && target
+      && internalTarget.distanceTo(target) <
+        TARGET_THRESHOLD * TARGET_THRESHOLD_MULTIPLIER
+      && internalPosition.distanceTo(position) > POSITION_THRESHOLD
+
     ) {
       internalPosition.lerp(position, ANIMATION_SPEED * delta);
-      //camera.position.set(newPosition.x, newPosition.y, newPosition.z);
+    }
+    else if (position && internalPosition.distanceTo(position) < POSITION_THRESHOLD) {
+      positionAnimationComplete = true;
     }
 
     // move camera according to key pressed

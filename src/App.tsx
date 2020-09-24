@@ -1,18 +1,22 @@
 import * as React from "react";
 import { ThreePointVis } from "./ThreePointVis/ThreePointVis";
 import "./styles.scss";
-//import redditClusters from "../data/redditClusters.json";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import {
   Group,
   Mesh,
   Object3D,
   BoxBufferGeometry,
-  MeshBasicMaterial
+  MeshBasicMaterial, WebGLRenderer
 } from "three";
-import { ViewportProvider } from "./ViewportHooks";
+import {useWindowSize} from "./ViewportHooks";
 import useAxios from "axios-hooks";
 import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
+import {CLIP_SCALE_FACTOR} from "./constants";
+import {Stats} from "./ThreePointVis/Stats";
+import {Canvas} from "react-three-fiber";
+import {Effects} from "./ThreePointVis/Effects";
+import {DebugStats} from "./ThreePointVis/DebugStats";
 
 export interface Point {
   id: number;
@@ -63,12 +67,11 @@ export default function App() {
     Math.max(Math.min(Math.floor(window.innerWidth / 50), 32), 1)
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
+  const [glContext, setGlContext] = React.useState<WebGLRenderer>();
 
   const [{ data, loading, error }] = useAxios(
     `https://redditexplorer.com/GetData/dataset:original,n_points:${pointCount}`
   );
-
-  //const data = redditClusters ;
 
   React.useEffect(() => {
     const newData = data
@@ -133,24 +136,28 @@ export default function App() {
     });
   };
 
+  const { width, height } = useWindowSize();
+
   return (
     <div className="App">
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
-        <ViewportProvider key={redditData.length}>
-          <div className="vis-container">
-              <ThreePointVis
-                data={redditData}
-                clusters={clusters}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                pointResolution={pointResolution}
-                voxelResolution={Math.max(6, Math.floor(Math.cbrt(redditData.length/80)))}
-              />
-            )
-          </div>
-        </ViewportProvider>)
+          <div className="vis-container" key={redditData.length}>]
+            <Canvas concurrent camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}} onCreated={({ gl }) => setGlContext(gl)}>
+              <Stats/>
+              <Effects/>
+                  <ThreePointVis
+                    data={redditData}
+                    clusters={clusters}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    pointResolution={pointResolution}
+                    voxelResolution={Math.max(6, Math.floor(Math.cbrt(redditData.length/80)))}
+                  />
+                )
+            </Canvas>
+          </div>)
       }
       <div className="controls">
         <div className="controls-title-bar">
@@ -236,6 +243,7 @@ export default function App() {
                 </select>
               </div>
             </form>
+            {glContext && <DebugStats gl={glContext}/>}
           </>
         )}
       </div>

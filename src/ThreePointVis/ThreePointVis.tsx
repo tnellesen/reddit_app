@@ -1,15 +1,12 @@
 import * as React from "react";
 import * as THREE from "three";
 import { Controls } from "./Controls";
-import { Canvas } from "react-three-fiber";
 import { InstancedPoints } from "./InstancedPoints";
-import { Stats } from "./Stats";
 import { Effects } from "./Effects";
 import { Text, Position } from "./Text";
 //import { ClusterHulls } from "./ClusterHulls";
 import { Cluster, Point } from "../App";
-import { useViewport } from "../ViewportHooks";
-import { CLIP_SCALE_FACTOR } from "../constants";
+import { useWindowSize} from "../ViewportHooks";
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 
 export type SelectedId = number | null;
@@ -42,11 +39,10 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
       ? new THREE.Vector3(selected.x, selected.y, selected.z)
       : null;
 
-  const { width, height } = useViewport();
+  const { width } = useWindowSize();
 
   return (
-      <Canvas concurrent camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}>
-        <Stats/>
+      <>
           <Controls target={cameraTarget} position={cameraPosition}/>
           <ambientLight color="#ffffff" intensity={0.1}/>
           <hemisphereLight
@@ -81,5 +77,5 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
           />
         )}
         <Effects/>
-      </Canvas>)
+      </>)
 };
