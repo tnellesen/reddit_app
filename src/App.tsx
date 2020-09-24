@@ -60,7 +60,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
   const [pointResolution, setPointResolution] = React.useState(
-    Math.max(Math.min(Math.floor(window.innerWidth / 33), 32), 1)
+    Math.max(Math.min(Math.floor(window.innerWidth / 50), 32), 1)
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
 
@@ -136,7 +136,7 @@ export default function App() {
   return (
     <div className="App">
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
-      {error && <span>{error}</span>}
+      {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
         <ViewportProvider key={redditData.length}>
           <div className="vis-container">
