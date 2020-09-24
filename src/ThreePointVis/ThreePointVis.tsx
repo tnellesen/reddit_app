@@ -45,7 +45,7 @@ export const ThreePointVis = (props: ThreePointVisProps) => {
   const { width, height } = useViewport();
 
   return (
-      <Canvas camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}>
+      <Canvas concurrent camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}>
         <Stats/>
           <Controls target={cameraTarget} position={cameraPosition}/>
           <ambientLight color="#ffffff" intensity={0.1}/>

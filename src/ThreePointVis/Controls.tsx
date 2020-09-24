@@ -3,7 +3,7 @@ import { extend, useThree, useFrame } from "react-three-fiber";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import useEventListener from "@use-it/event-listener";
 import * as THREE from "three";
-import { useState } from "react";
+//import { useState } from "react";
 import { SCALE_FACTOR } from "../constants";
 
 interface ControlsProps {
@@ -23,9 +23,6 @@ const origin = new THREE.Vector3(0, 0, 0);
 export const Controls = (props: ControlsProps) => {
   const { target, position } = props;
 
-  const [internalTarget, setInternalTarget] = useState(origin);
-  const [internalPosition, setInternalPosition] = useState(origin);
-
   const controls = React.useRef<OrbitControls>();
 
   const { camera, gl } = useThree();
@@ -44,14 +41,13 @@ export const Controls = (props: ControlsProps) => {
 
   // Reference: httpwdwdawds://maxrohde.com/2019/10/25/camera-movement-with-three-js/
   useFrame((_, delta) => {
-    controls.current!.update();
+    const internalTarget = controls.current?.target || origin;
+    const internalPosition = camera.position;
 
     // interpolate target
-    const currentTarget = controls.current?.target || origin;
+    //const currentTarget = controls.current?.target || origin;
     if (target && internalTarget.distanceTo(target) > TARGET_THRESHOLD) {
-      setInternalTarget(
-        currentTarget.clone().lerp(target, ANIMATION_SPEED * delta)
-      );
+      internalTarget.lerp(target, ANIMATION_SPEED * delta);
     }
 
     if (
@@ -61,11 +57,8 @@ export const Controls = (props: ControlsProps) => {
         TARGET_THRESHOLD * TARGET_THRESHOLD_MULTIPLIER &&
       internalPosition.distanceTo(position) > POSITION_THRESHOLD
     ) {
-      const newPosition = camera.position
-        .clone()
-        .lerp(position, ANIMATION_SPEED * delta);
-      setInternalPosition(newPosition);
-      camera.position.set(newPosition.x, newPosition.y, newPosition.z);
+      internalPosition.lerp(position, ANIMATION_SPEED * delta);
+      //camera.position.set(newPosition.x, newPosition.y, newPosition.z);
     }
 
     // move camera according to key pressed
@@ -98,12 +91,9 @@ export const Controls = (props: ControlsProps) => {
         default:
       }
     });
-  });
 
-  // If we receive a new position prop, interpolate position
-  React.useEffect(() => {
-    setInternalPosition(camera.position);
-  }, [position, camera.position]);
+    controls.current!.update();
+  });
 
   useEventListener("keydown", handleKeyDown);
   useEventListener("keyup", handleKeyUp);
@@ -121,7 +111,6 @@ export const Controls = (props: ControlsProps) => {
       args={[camera, gl.domElement]}
       dampingFactor={0.1}
       enableDamping
-      target={internalTarget}
     />
   );
 };
