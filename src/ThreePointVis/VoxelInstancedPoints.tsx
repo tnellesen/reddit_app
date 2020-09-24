@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { Point } from "../App";
 import {clusterColors, POINT_RADIUS} from "../constants";
 import {InstancedBufferAttribute, MeshStandardMaterial, Object3D, Vector3} from "three";
-import {useMemo} from "react";
+import {memo, useMemo} from "react";
 
 interface VoxelInstancedPointsProps {
   data: Point[];
@@ -32,7 +32,8 @@ const updateColors = (
 };
 
 
-export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
+
+export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
   const { data, pointSegments, voxelResolution } = props;
 
   const [voxels, setVoxels] = React.useState<Point[][]>([]);
@@ -156,4 +157,4 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
       )}
     </>
   );
-};
+});
