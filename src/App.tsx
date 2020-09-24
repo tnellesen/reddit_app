@@ -67,6 +67,7 @@ export default function App() {
     Math.max(Math.min(Math.floor(window.innerWidth / 50), 32), 1)
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
+  const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   //const [glContext, setGlContext] = React.useState<WebGLRenderer>();
 
   const [{ data, loading, error }] = useAxios(
@@ -148,7 +149,7 @@ export default function App() {
           <div className="vis-container" key={redditData.length}>]
             <Canvas concurrent camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}>
               <Stats/>
-              <Effects/>
+              {usePostProcessing && <Effects useAA useUnrealBloom />}
                   <ThreePointVis
                     data={redditData}
                     clusters={clusters}
@@ -227,6 +228,16 @@ export default function App() {
                   step={0.01}
                   value={maxPercentNSFW}
                   onChange={(event) => setMaxPercentNSFW(+event.target.value)}
+                />
+                <br />
+                <label htmlFor="usePostProcessing">
+                  Enable Post FX:
+                </label>
+                <input
+                  id="usePostProcessing"
+                  type="checkbox"
+                  checked={usePostProcessing}
+                  onChange={(event) => setUsePostProcessing(event.target.checked)}
                 />
               </div>
               <div>
