@@ -11,7 +11,17 @@ import {
 } from "three";
 import useAxios from "axios-hooks";
 import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
-import {CLIP_SCALE_FACTOR, dataSetList, dataSets, MAX_POINT_RES, MIN_VOXEL_RES, POINT_RADIUS, MAX_VOXEL_RES} from "./constants";
+import {
+  CLIP_SCALE_FACTOR,
+  dataSetList,
+  dataSets,
+  MAX_POINT_RES,
+  MIN_VOXEL_RES,
+  POINT_RADIUS,
+  MAX_VOXEL_RES,
+  MIN_VIEW_DISTANCE,
+  MAX_VIEW_DISTANCE
+} from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
 import {Effects} from "./ThreePointVis/Effects";
@@ -79,7 +89,8 @@ export default function App() {
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
   const [debugVoxels, setDebugVoxels] = React.useState(false);
-  const [viewDistance, setViewDistance] = React.useState(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR);
+  const [viewDistance, setViewDistance] = React.useState(
+    Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE));
   const [camera, setCamera] = React.useState<Camera>();
 
 
@@ -335,13 +346,17 @@ export default function App() {
               </div>
               <div>
                 <label htmlFor="numClusters" ># Clusters: </label>
-                <select name="numClusters" id="numClusters" onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}>
+                <select name="numClusters" id="numClusters"
+                        onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
+                        value={clusterCounts[clusterIndex]}>
                   {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
                 </select>
               </div>
               <div>
                 <label htmlFor="dataSet" ># Data Set: </label>
-                <select name="dataSet" id="dataSet" onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}>
+                <select name="dataSet" id="dataSet"
+                        onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}
+                        value={dataSets[dataSet]}>
                   {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
                 </select>
               </div>
@@ -350,7 +365,8 @@ export default function App() {
                 <select name="pointCount" id="pointCount" onChange={(event) => {
                   setPointCoint(+event.target.value);
                   setSelectedId(null);
-                }}>
+                }}
+                value={pointCount}>
                   {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
                 </select>
               </div>
@@ -362,8 +378,8 @@ export default function App() {
               <input
                 id="voxelResSlider"
                 type="range"
-                min={100}
-                max={20000}
+                min={MIN_VIEW_DISTANCE}
+                max={MAX_VIEW_DISTANCE}
                 value={viewDistance}
                 onChange={(event) => setViewDistance(+event.target.value)}
                 step="1"

@@ -8,6 +8,9 @@ export const MAX_POINT_RES = 32;
 export const MIN_VOXEL_RES = 6;
 export const MAX_VOXEL_RES = 12;
 
+export const MIN_VIEW_DISTANCE = 100;
+export const MAX_VIEW_DISTANCE = 20000;
+
 export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
