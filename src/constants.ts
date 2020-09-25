@@ -5,6 +5,9 @@ export const POINT_RADIUS = 1.0 * SCALE_FACTOR;
 
 export const MAX_POINT_RES = 32;
 
+export const MIN_VOXEL_RES = 6;
+export const MAX_VOXEL_RES = 12;
+
 export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
