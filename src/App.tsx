@@ -122,7 +122,6 @@ export default function App() {
       setClusters(newClusters);
     }
     setClusterCounts(newClusterCounts);
-    setVoxelResolution(getAutoVoxelResolution(pointCount));
   }, [maxPercentNSFW, data, clusterIndex]);
 
   React.useEffect(() => {
@@ -140,6 +139,10 @@ export default function App() {
       : [];
     setClusters(newClusters);
   }, [clusterIndex, clusterCounts, data]);
+
+  React.useEffect(() => {
+    setVoxelResolution(getAutoVoxelResolution(pointCount));
+  },[pointCount] )
 
   const search = () => {
     redditData.forEach((point) => {
