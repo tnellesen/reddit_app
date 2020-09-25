@@ -7,8 +7,8 @@ import { Text, Position } from "./Text";
 import { Cluster, Point } from "../App";
 import { useWindowSize} from "../ViewportHooks";
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
-import {POINT_RADIUS, SCALE_FACTOR} from "../constants";
-import {memo} from "react";
+import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR} from "../constants";
+import {memo, useMemo} from "react";
 
 export type SelectedId = number | null;
 export type SelectHandler = (
@@ -43,6 +43,8 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
       : null;
 
   const { width } = useWindowSize();
+
+  const selectedPointRes = useMemo(() => Math.min(pointResolution*4, MAX_POINT_RES), [pointResolution]);
     
   return (
       <>
@@ -89,7 +91,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
             >
               <sphereBufferGeometry
                 attach="geometry"
-                args={[POINT_RADIUS*1.01, pointResolution, pointResolution]}
+                args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
               <meshStandardMaterial attach="material" color={SELECTED_COLOR} />
             </mesh>
