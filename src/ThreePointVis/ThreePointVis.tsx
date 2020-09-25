@@ -94,7 +94,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
-              <meshStandardMaterial attach="material" polygonOffset={true} polygonOffsetFactor={-5} transparent={true} depthTest={false} opacity={1} colorWrite={true}  color={"#000000"}/>
+              <meshStandardMaterial attach="material" transparent={true} depthTest={false} opacity={0.1} colorWrite={true}  color={"#000000"}/>
             </mesh>
             <mesh>
               <sphereBufferGeometry
