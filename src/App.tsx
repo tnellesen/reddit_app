@@ -69,7 +69,7 @@ export default function App() {
   const [pointResolution, setPointResolution] = React.useState(
     Math.max(Math.min(Math.floor(window.innerWidth / 69), MAX_POINT_RES), 1)
   );
-  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(1);
+  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
@@ -136,7 +136,7 @@ export default function App() {
 
   const search = () => {
     redditData.forEach((point) => {
-      if (point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
+      if (point.include && point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
         setSelectedId(point.id);
       }
     });
@@ -203,7 +203,7 @@ export default function App() {
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
-          <div className="vis-container" key={redditData.length + maxPercentNSFW}>
+          <div className="vis-container" key={`${redditData.length} ${maxPercentNSFW}`}>
             <Canvas concurrent
                     camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}
                     onCreated={gl => setCamera(gl.camera)}
@@ -290,7 +290,12 @@ export default function App() {
                   max={100}
                   step={0.01}
                   value={maxPercentNSFW}
-                  onChange={(event) => setMaxPercentNSFW(+event.target.value)}
+                  onChange={(event) => {
+                    setMaxPercentNSFW(+event.target.value);
+                    if(selectedId && redditData[selectedId].percentNsfw > +event.target.value) {
+                      setSelectedId(null);
+                    }
+                  }}
                 />
                 <br />
                 <label htmlFor="usePostProcessing">
