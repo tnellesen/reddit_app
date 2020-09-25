@@ -12,14 +12,13 @@ import {
 import {useWindowSize} from "./ViewportHooks";
 import useAxios from "axios-hooks";
 import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
-import { CLIP_SCALE_FACTOR, dataSetList, dataSets, MAX_POINT_RES, POINT_RADIUS } from "./constants";
+import {CLIP_SCALE_FACTOR, dataSetList, dataSets, MAX_POINT_RES, MIN_VOXEL_RES, POINT_RADIUS, MAX_VOXEL_RES} from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Canvas} from "react-three-fiber";
 import {Effects} from "./ThreePointVis/Effects";
 import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
 import {useMemo} from "react";
-//import {DebugStats} from "./ThreePointVis/DebugStats";
 
 export interface Point {
   id: number;
@@ -38,6 +37,12 @@ export interface Cluster {
 }
 
 const loader = new OBJLoader();
+
+const getAutoVoxelResolution = (numberOfPoints: number) => {
+  return Math.max(MIN_VOXEL_RES,
+    Math.min(MAX_VOXEL_RES,
+      Math.floor(Math.cbrt(numberOfPoints/80))))
+}
 
 const getMesh = (group: Group | Object3D): Mesh => {
   for (let i = 0; i < group.children.length; i++) {
@@ -74,6 +79,7 @@ export default function App() {
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
   const [camera, setCamera] = React.useState();
+  const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
 
   const [{ data, loading, error }] = useAxios(
     `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`
@@ -115,7 +121,8 @@ export default function App() {
     if(newClusters && newClusters.length) {
       setClusters(newClusters);
     }
-    setClusterCounts(newClusterCounts)
+    setClusterCounts(newClusterCounts);
+    setVoxelResolution(getAutoVoxelResolution(pointCount));
   }, [maxPercentNSFW, data, clusterIndex]);
 
   React.useEffect(() => {
@@ -217,9 +224,7 @@ export default function App() {
                     selectedId={selectedId}
                     onSelect={setSelectedId}
                     pointResolution={pointResolution}
-                    voxelResolution={Math.max(6,
-                      Math.min(12,
-                        Math.floor(Math.cbrt(redditData.length/80))))}
+                    voxelResolution={voxelResolution}
                   />
                 )
             </Canvas>
@@ -339,6 +344,20 @@ export default function App() {
                   {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
                 </select>
               </div>
+              <br />
+              <label htmlFor="voxelResSlider">
+                {" "}
+                Voxel Resolution: {voxelResolution}
+              </label>
+              <input
+                id="voxelResSlider"
+                type="range"
+                min={1}
+                max={MAX_VOXEL_RES}
+                value={voxelResolution}
+                onChange={(event) => setVoxelResolution(+event.target.value)}
+                step="1"
+              />
             </form>
             {/*glContext && <DebugStats gl={glContext}/> */}
           </>
