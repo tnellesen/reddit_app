@@ -203,7 +203,7 @@ export default function App() {
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
-          <div className="vis-container" key={`${redditData.length} ${maxPercentNSFW}`}>
+          <div className="vis-container" key={redditData.length}>
             <Canvas concurrent
                     camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}
                     onCreated={gl => setCamera(gl.camera)}

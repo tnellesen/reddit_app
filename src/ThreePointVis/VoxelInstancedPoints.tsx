@@ -128,7 +128,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         {voxels.map((voxel, index) =>
           voxel.length > 0
             ? <instancedMesh
-                key={index}
+                key={`${index} ${voxel.length}`}
                 ref={(mesh: THREE.InstancedMesh) => meshRefs.current[index] = mesh}
                 args={[
                   // TODO sort out the bugged typing here.
