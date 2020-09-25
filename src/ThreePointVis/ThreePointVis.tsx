@@ -72,31 +72,39 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
             voxelResolution={voxelResolution}
             debugVoxels={debugVoxels}
           />}
+
         {selected !== null && (
-          <Text
-            message={selected.subreddit}
-            x={selected.x}
-            y={selected.y}
-            z={selected.z}
-            position={width < 500 ? Position.BOTTOM : Position.LEFT}
-          />
-        )}
-        {selectedId !== null && (
           <group
             position={[
-              data[selectedId].x,
-              data[selectedId].y,
-              data[selectedId].z
+              selected.x,
+              selected.y,
+              selected.z
             ]}
           >
+            <Text
+              message={selected.subreddit}
+              x={0}
+              y={0}
+              z={0}
+              position={width < 500 ? Position.BOTTOM : Position.LEFT}
+            />
             <mesh
-            >
+              renderOrder={1}>
               <sphereBufferGeometry
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
-              <meshStandardMaterial attach="material" color={SELECTED_COLOR} />
+              <meshStandardMaterial attach="material" polygonOffset={true} polygonOffsetFactor={-5} transparent={true} depthTest={false} opacity={1} colorWrite={true}  color={"#000000"}/>
             </mesh>
+            <mesh>
+              <sphereBufferGeometry
+                attach="geometry"
+                args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
+              />
+              <meshStandardMaterial attach="material" color={SELECTED_COLOR}/>
+            </mesh>
+
+
             <pointLight
               distance={19 * SCALE_FACTOR}
               position={[0, 0, 0]}

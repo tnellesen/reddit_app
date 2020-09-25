@@ -81,13 +81,24 @@ export function Text(props: TextProps) {
   }, [message, width, height, position]);
 
   return (
-    <sprite
-      scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
-      position={[x, y, z]}
-    >
-      <spriteMaterial attach="material">
-        <canvasTexture attach="map" key={message} image={textCanvas} />
-      </spriteMaterial>
-    </sprite>
+    <>
+      <sprite
+        scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
+        position={[x, y, z]}
+        renderOrder={0}
+      >
+        <spriteMaterial attach="material" transparent={true} depthTest={false} opacity={0.19}>
+          <canvasTexture attach="map" key={message} image={textCanvas} />
+        </spriteMaterial>
+      </sprite>
+      <sprite
+        scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
+        position={[x, y, z]}
+      >
+        <spriteMaterial attach="material">
+          <canvasTexture attach="map" key={message} image={textCanvas}  />
+        </spriteMaterial>
+      </sprite>
+    </>
   );
 }
