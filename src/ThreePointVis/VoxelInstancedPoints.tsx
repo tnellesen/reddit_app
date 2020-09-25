@@ -57,18 +57,20 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
 
     //const newVoxels: Point[][] = new Array(Math.pow(voxelResolution, 3)).fill(new Array);
     data.forEach(point => {
-      // Shift into positive ranges
-      const x = point.x + gridScale;
-      const y = point.y + gridScale;
-      const z = point.z + gridScale;
+      if(point.include) {
+        // Shift into positive ranges
+        const x = point.x + gridScale;
+        const y = point.y + gridScale;
+        const z = point.z + gridScale;
 
-      const voxelIndex = Math.floor(x/gridStep)
-        + Math.floor(y/gridStep) * voxelResolution
-        + Math.floor(z/gridStep) * voxelResolution*voxelResolution;
-      if( newVoxels[voxelIndex] === undefined) {
-        console.log(voxelIndex);
+        const voxelIndex = Math.floor(x/gridStep)
+          + Math.floor(y/gridStep) * voxelResolution
+          + Math.floor(z/gridStep) * voxelResolution*voxelResolution;
+        if( newVoxels[voxelIndex] === undefined) {
+          console.log(voxelIndex);
+        }
+        newVoxels[voxelIndex].push(point);
       }
-      newVoxels[voxelIndex].push(point);
     })
     setVoxels(newVoxels);
   }, [data, voxelResolution]);
@@ -88,7 +90,6 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         if(mesh) {
           mesh.matrixAutoUpdate = false; // TODO try for clusters
           mesh.updateMatrix();
-
           // set the transform matrix for each instance
           for (let j = 0; j < points.length; ++j) {
             const x = points[j].x;
@@ -106,7 +107,6 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
           mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, POINT_RADIUS);
           mesh.instanceMatrix.needsUpdate = true;
           mesh.frustumCulled = true;
-
           updateColors(
             voxel,
             colorArrays[i],
@@ -115,8 +115,8 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         }
       }
       else {
-        numEmptyVoxels++;
-      }
+       numEmptyVoxels++;
+     }
     }
     console.log("Total Voxels: ", voxels.length);
     console.log("Empty Voxels: ", numEmptyVoxels);

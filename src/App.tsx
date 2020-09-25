@@ -69,7 +69,7 @@ export default function App() {
   const [pointResolution, setPointResolution] = React.useState(
     Math.max(Math.min(Math.floor(window.innerWidth / 69), MAX_POINT_RES), 1)
   );
-  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
+  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(1);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
@@ -151,7 +151,7 @@ export default function App() {
   raycaster.params = {Points: { threshold: POINT_RADIUS * 0.01 }};
 
   const collisionGeometry = useMemo(() => {
-    return redditData.map(point => {
+    return redditData.filter(point => point.include).map(point => {
         const sphere = new Sphere (new Vector3(point.x, point.y, point.z), POINT_RADIUS);
         const collisionSphere = new CollisionSphere(sphere, point.id);
         return collisionSphere;
@@ -203,7 +203,7 @@ export default function App() {
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
-          <div className="vis-container" key={redditData.length}>
+          <div className="vis-container" key={redditData.length + maxPercentNSFW}>
             <Canvas concurrent
                     camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}
                     onCreated={gl => setCamera(gl.camera)}
