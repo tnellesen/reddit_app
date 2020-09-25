@@ -7,8 +7,9 @@ import { Cluster, Point } from "../App";
 import { useWindowSize} from "../ViewportHooks"
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 import {ClusterHulls} from "./ClusterHulls";
-import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR} from "../constants";
+import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
 import {memo, useMemo} from "react";
+import {Color} from "three";
 
 export type SelectedId = number | null;
 export type SelectHandler = (
@@ -28,7 +29,7 @@ interface ThreePointVisProps {
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
   const { data, selectedId, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
 
-  const SELECTED_COLOR = "#6f6";
+
 
   const selected =
     selectedId !== null && data[selectedId].include ? data[selectedId] : null;
@@ -93,14 +94,19 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
-              <meshStandardMaterial attach="material" transparent={true} depthTest={false} opacity={0.1} color={"#000000"}/>
+              <meshLambertMaterial attach="material"
+                                    transparent={true}
+                                    emissive={new Color(SELECTED_COLOR)}
+                                    emissiveIntensity={1} depthTest={false} opacity={0.19} color={SELECTED_COLOR}/>
             </mesh>
             <mesh renderOrder={5}>
               <sphereBufferGeometry
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
-              <meshStandardMaterial attach="material" color={SELECTED_COLOR}/>
+              <meshLambertMaterial attach="material"
+                                   transparent={true}
+                                   color={SELECTED_COLOR}/>
             </mesh>
 
 
