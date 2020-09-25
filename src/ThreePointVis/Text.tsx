@@ -46,22 +46,30 @@ export function Text(props: TextProps) {
     return canvas;
   }, [message, width, height, position]);
 
+  const offset = 0.11;
   let center = new Vector2(0.5, 0.5);
+  let offCenter = new Vector2(0.5, 0.5);
 
   switch (position) {
     case Position.LEFT:
       center.x = 1 + 1.01/message.length;
+      offCenter.x = center.x + offset;
       break;
     case Position.RIGHT:
       center.x = -1.01/message.length;
+      offCenter.x = center.x - offset;
       break;
     case Position.TOP:
       center.y = -0.5;
+      offCenter.y = center.y - offset;
       break;
     case Position.BOTTOM:
       center.y = 1.6
+      offCenter.y = center.x + offset;
       break;
   }
+
+  const offSetVector = center.clone().sub(offCenter);
 
   return (
     <>
@@ -69,10 +77,10 @@ export function Text(props: TextProps) {
         scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
         position={[x, y, z]}
         renderOrder={1}
-        center={center}
+        center={offCenter}
       >
         <spriteMaterial attach="material" transparent={true} depthTest={false} opacity={0.19}>
-          <canvasTexture attach="map" key={message} image={textCanvas} />
+          <canvasTexture attach="map" key={message} image={textCanvas} offset={offSetVector}  />
         </spriteMaterial>
       </sprite>}
       <sprite

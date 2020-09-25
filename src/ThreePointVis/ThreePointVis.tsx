@@ -88,15 +88,14 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
               z={0}
               position={width < 500 ? Position.BOTTOM : Position.RIGHT}
             />
-            <mesh
-              renderOrder={2}>
+            <mesh renderOrder={2}>
               <sphereBufferGeometry
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
               <meshStandardMaterial attach="material" transparent={true} depthTest={false} opacity={0.1} color={"#000000"}/>
             </mesh>
-            <mesh>
+            <mesh renderOrder={5}>
               <sphereBufferGeometry
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
