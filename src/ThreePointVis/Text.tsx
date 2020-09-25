@@ -50,10 +50,10 @@ export function Text(props: TextProps) {
 
   switch (position) {
     case Position.LEFT:
-      center.x = 1.1;
+      center.x = 1 + 1.01/message.length;
       break;
     case Position.RIGHT:
-      center.x = -0.1;
+      center.x = -1.01/message.length;
       break;
     case Position.TOP:
       center.y = -0.5;
@@ -65,15 +65,16 @@ export function Text(props: TextProps) {
 
   return (
     <>
-      {/*<sprite
+      {<sprite
         scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
         position={[x, y, z]}
         renderOrder={1}
+        center={center}
       >
         <spriteMaterial attach="material" transparent={true} depthTest={false} opacity={0.19}>
           <canvasTexture attach="map" key={message} image={textCanvas} />
         </spriteMaterial>
-      </sprite> */}
+      </sprite>}
       <sprite
         scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
         position={[x, y, z]}

@@ -86,7 +86,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
               x={0}
               y={0}
               z={0}
-              position={width < 500 ? Position.BOTTOM : Position.LEFT}
+              position={width < 500 ? Position.BOTTOM : Position.RIGHT}
             />
             <mesh
               renderOrder={2}>
