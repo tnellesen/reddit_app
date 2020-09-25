@@ -3,10 +3,10 @@ import * as THREE from "three";
 import { Controls } from "./Controls";
 import { InstancedPoints } from "./InstancedPoints";
 import { Text, Position } from "./Text";
-//import { ClusterHulls } from "./ClusterHulls"
 import { Cluster, Point } from "../App";
 import { useWindowSize} from "../ViewportHooks";
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
+import {ClusterHulls} from "./ClusterHulls";
 import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR} from "../constants";
 import {memo, useMemo} from "react";
 
@@ -25,7 +25,7 @@ interface ThreePointVisProps {
 }
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
-  const { data, selectedId, onSelect, pointResolution, voxelResolution } = props;
+  const { data, selectedId, clusters, onSelect, pointResolution, voxelResolution } = props;
 
   const SELECTED_COLOR = "#6f6";
 
@@ -56,7 +56,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
             groundColor={new THREE.Color("#080820")}
             intensity={1.0}
         />
-        {/*clusters && <ClusterHulls clusters={clusters}/> */}
+        {clusters && <ClusterHulls clusters={clusters}/>}
         {voxelResolution <= 1
           ? <InstancedPoints
             selectedId={selectedId}

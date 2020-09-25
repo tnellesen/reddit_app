@@ -5,6 +5,13 @@ export const POINT_RADIUS = 1.0 * SCALE_FACTOR;
 
 export const MAX_POINT_RES = 32;
 
+export type dataSetList = {[name: string]: string};
+
+export const dataSets: dataSetList = {
+  Original: "original",
+  New25: "new_0.25"
+}
+
 //https://coolors.co/263b3b-0b195e-bc3c00-773b08-541818-340534-0e2412-3b0c1a-790579-0d620b
 export const clusterColors = [
   "#263b3b",
