@@ -67,7 +67,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
   const [pointResolution, setPointResolution] = React.useState(
-    Math.max(Math.min(Math.floor(window.innerWidth / 69), 32), 1)
+    Math.max(Math.min(Math.floor(window.innerWidth / 69), MAX_POINT_RES), 1)
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
@@ -273,7 +273,7 @@ export default function App() {
                   id="resolutionSlider"
                   type="range"
                   min="1"
-                  max="32"
+                  max={MAX_POINT_RES}
                   value={pointResolution}
                   onChange={(event) => setPointResolution(+event.target.value)}
                   step="1"
