@@ -72,7 +72,7 @@ export default function App() {
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
-  const [dataSet, setDataSet] = React.useState<string>(Object.keys(dataSets)[0]);
+  const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
   const [camera, setCamera] = React.useState();
 
   const [{ data, loading, error }] = useAxios(
