@@ -9,6 +9,7 @@ interface VoxelInstancedPointsProps {
   data: Point[];
   pointSegments: number;
   voxelResolution: number;
+  debugVoxels?: boolean;
 }
 
 const gridScale = 1001;
@@ -17,12 +18,13 @@ const scratchColor = new THREE.Color( 0xff0000);
 const updateColors = (
   points: Point[],
   colorArray: Float32Array,
-  colorAttrib: InstancedBufferAttribute
+  colorAttrib: InstancedBufferAttribute,
+  voxelIndex?: number
 ) => {
   for (let i = 0; i < points.length; ++i) {
     const point = points[i];
     scratchColor.set(
-      clusterColors[point.cluster]
+      clusterColors[voxelIndex === undefined ? point.cluster  : voxelIndex % clusterColors.length]
     );
     scratchColor.toArray(colorArray, i * 3);
   }
@@ -34,7 +36,7 @@ const updateColors = (
 
 
 export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
-  const { data, pointSegments, voxelResolution } = props;
+  const { data, pointSegments, voxelResolution, debugVoxels } = props;
 
   const [voxels, setVoxels] = React.useState<Point[][]>([]);
 
@@ -110,7 +112,8 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
           updateColors(
             voxel,
             colorArrays[i],
-            colorAttribs.current[i]
+            colorAttribs.current[i],
+            debugVoxels ? i : undefined
           )
         }
       }

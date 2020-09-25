@@ -80,6 +80,7 @@ export default function App() {
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
   const [camera, setCamera] = React.useState();
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
+  const [debugVoxels, setDebugVoxels] = React.useState(false);
 
   const [{ data, loading, error }] = useAxios(
     `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`
@@ -228,6 +229,7 @@ export default function App() {
                     onSelect={setSelectedId}
                     pointResolution={pointResolution}
                     voxelResolution={voxelResolution}
+                    debugVoxels={debugVoxels}
                   />
                 )
             </Canvas>
@@ -360,6 +362,16 @@ export default function App() {
                 value={voxelResolution}
                 onChange={(event) => setVoxelResolution(+event.target.value)}
                 step="1"
+              />
+              <br />
+              <label htmlFor="debugVoxels">
+                Show Voxel Debug:
+              </label>
+              <input
+                id="debugVoxels"
+                type="checkbox"
+                checked={debugVoxels}
+                onChange={(event) => setDebugVoxels(event.target.checked)}
               />
             </form>
             {/*glContext && <DebugStats gl={glContext}/> */}

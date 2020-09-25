@@ -22,10 +22,11 @@ interface ThreePointVisProps {
   onSelect: SelectHandler;
   pointResolution: number;
   voxelResolution: number;
+  debugVoxels?: boolean;
 }
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
-  const { data, selectedId, clusters, onSelect, pointResolution, voxelResolution } = props;
+  const { data, selectedId, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
 
   const SELECTED_COLOR = "#6f6";
 
@@ -69,6 +70,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
             data={data}
             pointSegments={pointResolution}
             voxelResolution={voxelResolution}
+            debugVoxels={debugVoxels}
           />}
         {selected !== null && (
           <Text
