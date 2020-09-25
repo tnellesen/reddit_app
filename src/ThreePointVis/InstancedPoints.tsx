@@ -82,8 +82,6 @@ function updateInstancedMeshMatrices(
 
 const SELECTED_COLOR = "#6f6";
 
-
-
 const updateColors = (
   data: Point[],
   selectedId: SelectedId,

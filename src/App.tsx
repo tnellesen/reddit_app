@@ -217,7 +217,7 @@ export default function App() {
                     pointResolution={pointResolution}
                     voxelResolution={Math.max(6,
                       Math.min(12,
-                        Math.floor(Math.cbrt(redditData.length/100))))}
+                        Math.floor(Math.cbrt(redditData.length/80))))}
                   />
                 )
             </Canvas>

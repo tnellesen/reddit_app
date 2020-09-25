@@ -5,6 +5,7 @@ import useEventListener from "@use-it/event-listener";
 import * as THREE from "three";
 //import { useState } from "react";
 import { SCALE_FACTOR } from "../constants";
+import {memo} from "react";
 
 interface ControlsProps {
   target: THREE.Vector3 | null;
@@ -20,7 +21,7 @@ const ANIMATION_SPEED = 5;
 
 const origin = new THREE.Vector3(0, 0, 0);
 
-export const Controls = (props: ControlsProps) => {
+export const Controls = memo((props: ControlsProps) => {
   const { target, position } = props;
 
   const controls = React.useRef<OrbitControls>();
@@ -68,7 +69,7 @@ export const Controls = (props: ControlsProps) => {
     ) {
       internalPosition.lerp(position, ANIMATION_SPEED * delta);
     }
-    else if (position && internalPosition.distanceTo(position) < POSITION_THRESHOLD) {
+    else if (!positionAnimationComplete && position && internalPosition.distanceTo(position) < POSITION_THRESHOLD) {
       internalPosition.sub(position).setLength(POSITION_THRESHOLD).add(position);
       positionAnimationComplete = true;
     }
@@ -125,4 +126,4 @@ export const Controls = (props: ControlsProps) => {
       enableDamping
     />
   );
-};
+});

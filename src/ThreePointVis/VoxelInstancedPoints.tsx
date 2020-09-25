@@ -1,9 +1,9 @@
 import * as React from "react";
 import * as THREE from "three";
 import { Point } from "../App";
-import {POINT_RADIUS} from "../constants";
-import {Object3D, Vector3} from "three";
-import {useMemo} from "react";
+import {clusterColors, POINT_RADIUS} from "../constants";
+import {InstancedBufferAttribute, MeshStandardMaterial, Object3D, Vector3} from "three";
+import {memo, useMemo} from "react";
 
 interface VoxelInstancedPointsProps {
   data: Point[];
@@ -12,40 +12,39 @@ interface VoxelInstancedPointsProps {
 }
 
 const gridScale = 1001;
+const scratchColor = new THREE.Color( 0xff0000);
 
-// re-use for instance computations
-//const scratchColor = new THREE.Color();
-
-
-/*
 const updateColors = (
-  data: Point[],
-  selectedId: SelectedId,
-  pointIndexToId: number[],
-  maxCount: number,
+  points: Point[],
   colorArray: Float32Array,
-  colorAttrib: MutableRefObject<InstancedBufferAttribute | undefined>
+  colorAttrib: InstancedBufferAttribute
 ) => {
-  for (let i = 0; i < maxCount; ++i) {
-    const point = data[pointIndexToId[i]];
+  for (let i = 0; i < points.length; ++i) {
+    const point = points[i];
     scratchColor.set(
-      point.id === selectedId ? SELECTED_COLOR : clusterColors[point.cluster]
+      clusterColors[point.cluster]
     );
     scratchColor.toArray(colorArray, i * 3);
-
-    if (colorAttrib.current) {
-      colorAttrib.current.needsUpdate = true;
-    }
+  }
+  if (colorAttrib) {
+    colorAttrib.needsUpdate = true;
   }
 };
-*/
 
-export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
+
+
+export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
   const { data, pointSegments, voxelResolution } = props;
 
   const [voxels, setVoxels] = React.useState<Point[][]>([]);
 
+  // re-use for instance computations
   const meshRefs = React.useRef<THREE.InstancedMesh[]>([]);
+  let colorAttribs = React.useRef<THREE.InstancedBufferAttribute[]>([]);
+  let colorArrays: Float32Array[] = [];
+  for (let i = 0; i < voxels.length; i++) {
+    colorArrays[i] = new Float32Array(voxels[i].length * 3);
+  }
 
   // Sort points into voxel grid when data or grid resolution changes
   React.useEffect(() => {
@@ -70,27 +69,21 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
         console.log(voxelIndex);
       }
       newVoxels[voxelIndex].push(point);
-      //meshRefs.current = meshRefs.current.slice(0, newVoxels.length);
     })
     setVoxels(newVoxels);
   }, [data, voxelResolution]);
 
-  /*
-  let colorAttrib = React.useRef<THREE.InstancedBufferAttribute>();
-  let colorArray = React.useMemo(() => new Float32Array(numPoints * 3), [
-    numPoints
-  ]);
-  */
-
   // re-use for instance computations
   const scratchObject3D = useMemo(() => new Object3D(), []);
+  const sharedMaterial = useMemo(() => new MeshStandardMaterial({vertexColors: true}), []);
 
   React.useEffect(() => {
     let numEmptyVoxels = 0;
     for (let i = 0; i < voxels.length; ++i) {
-      if (voxels[i].length > 0) {
+      const voxel = voxels[i];
+      if (voxel.length > 0) {
         const mesh = meshRefs.current[i];
-        const points = voxels[i].map(p => new Vector3(p.x, p.y, p.z));
+        const points = voxel.map(p => new Vector3(p.x, p.y, p.z));
 
         if(mesh) {
           mesh.matrixAutoUpdate = false; // TODO try for clusters
@@ -111,10 +104,14 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
           const center = boundingBox.getCenter(new THREE.Vector3());
           mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points, center);
           mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, POINT_RADIUS);
-          //console.log(points);
-          //console.log(mesh.geometry.boundingSphere);
           mesh.instanceMatrix.needsUpdate = true;
           mesh.frustumCulled = true;
+
+          updateColors(
+            voxel,
+            colorArrays[i],
+            colorAttribs.current[i]
+          )
         }
       }
       else {
@@ -124,7 +121,7 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
     console.log("Total Voxels: ", voxels.length);
     console.log("Empty Voxels: ", numEmptyVoxels);
     console.log("Percent Empty Voxels ", (numEmptyVoxels/voxels.length) * 100);
-  }, [voxels, scratchObject3D]);
+  }, [voxels, scratchObject3D, colorArrays]);
 
   return (
     <>
@@ -132,8 +129,7 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
           voxel.length > 0
             ? <instancedMesh
                 key={index}
-                userData={{voxelId: index}}
-                ref={(mesh : THREE.InstancedMesh) => meshRefs.current[index] = mesh}
+                ref={(mesh: THREE.InstancedMesh) => meshRefs.current[index] = mesh}
                 args={[
                   // TODO sort out the bugged typing here.
                   // Ref: https://spectrum.chat/react-three-fiber/general/instancedmesh-gone-on-rerender-in-typescript~35e4d145-517f-4b81-b0c7-ab89e02bd72f
@@ -141,23 +137,24 @@ export const VoxelInstancedPoints = (props: VoxelInstancedPointsProps) => {
                   (null as unknown) as THREE.Material,
                   voxel.length
                 ]}
+                material={sharedMaterial}
             >
                 <sphereBufferGeometry
                     attach="geometry"
                     args={[POINT_RADIUS, pointSegments, pointSegments]}
                     key={pointSegments}
                 >
-                  {/*<instancedBufferAttribute
-                        ref={colorAttrib}
+                  {<instancedBufferAttribute
+                        name={`color - voxel ${index}`}
+                        ref={(colorAttrib: THREE.InstancedBufferAttribute) => colorAttribs.current[index] = colorAttrib}
                         attachObject={["attributes", "color"]}
-                        args={[colorArray, 3]}
-                    /> */}
+                        args={[colorArrays[index], 3]}
+                    />}
                 </sphereBufferGeometry>
-              <meshStandardMaterial attach="material"/>
             </instancedMesh>
             : null
         )}
       )}
     </>
   );
-};
+});
