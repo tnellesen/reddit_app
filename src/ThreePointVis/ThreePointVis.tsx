@@ -4,11 +4,12 @@ import { Controls } from "./Controls";
 import { InstancedPoints } from "./InstancedPoints";
 import { Text, Position } from "./Text";
 import { Cluster, Point } from "../App";
-import { useWindowSize} from "../ViewportHooks";
+import { useWindowSize} from "../ViewportHooks"
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 import {ClusterHulls} from "./ClusterHulls";
-import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR} from "../constants";
+import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
 import {memo, useMemo} from "react";
+import {Color} from "three";
 
 export type SelectedId = number | null;
 export type SelectHandler = (
@@ -28,7 +29,7 @@ interface ThreePointVisProps {
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
   const { data, selectedId, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
 
-  const SELECTED_COLOR = "#6f6";
+
 
   const selected =
     selectedId !== null && data[selectedId].include ? data[selectedId] : null;
@@ -72,31 +73,43 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
             voxelResolution={voxelResolution}
             debugVoxels={debugVoxels}
           />}
+
         {selected !== null && (
-          <Text
-            message={selected.subreddit}
-            x={selected.x}
-            y={selected.y}
-            z={selected.z}
-            position={width < 500 ? Position.BOTTOM : Position.LEFT}
-          />
-        )}
-        {selectedId !== null && (
           <group
             position={[
-              data[selectedId].x,
-              data[selectedId].y,
-              data[selectedId].z
+              selected.x,
+              selected.y,
+              selected.z
             ]}
           >
-            <mesh
-            >
+            <Text
+              message={selected.subreddit}
+              x={0}
+              y={0}
+              z={0}
+              position={width < 500 ? Position.BOTTOM : Position.RIGHT}
+            />
+            <mesh renderOrder={2}>
               <sphereBufferGeometry
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
-              <meshStandardMaterial attach="material" color={SELECTED_COLOR} />
+              <meshLambertMaterial attach="material"
+                                    transparent={true}
+                                    emissive={new Color(SELECTED_COLOR)}
+                                    emissiveIntensity={1} depthTest={false} opacity={0.19} color={SELECTED_COLOR}/>
             </mesh>
+            <mesh renderOrder={5}>
+              <sphereBufferGeometry
+                attach="geometry"
+                args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
+              />
+              <meshLambertMaterial attach="material"
+                                   transparent={true}
+                                   color={SELECTED_COLOR}/>
+            </mesh>
+
+
             <pointLight
               distance={19 * SCALE_FACTOR}
               position={[0, 0, 0]}
