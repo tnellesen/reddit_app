@@ -9,12 +9,11 @@ import {
   BoxBufferGeometry,
   MeshBasicMaterial, Sphere, Vector3
 } from "three";
-import {useWindowSize} from "./ViewportHooks";
 import useAxios from "axios-hooks";
 import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
 import {CLIP_SCALE_FACTOR, dataSetList, dataSets, MAX_POINT_RES, MIN_VOXEL_RES, POINT_RADIUS, MAX_VOXEL_RES} from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
-import {Canvas} from "react-three-fiber";
+import {Camera, Canvas} from "react-three-fiber";
 import {Effects} from "./ThreePointVis/Effects";
 import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
@@ -78,8 +77,11 @@ export default function App() {
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
-  const [camera, setCamera] = React.useState();
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
+  const [debugVoxels, setDebugVoxels] = React.useState(false);
+  const [viewDistance, setViewDistance] = React.useState(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR);
+  const [camera, setCamera] = React.useState<Camera>();
+
 
   const [{ data, loading, error }] = useAxios(
     `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`
@@ -144,6 +146,13 @@ export default function App() {
     setVoxelResolution(getAutoVoxelResolution(pointCount));
   },[pointCount] )
 
+  React.useEffect(() => {
+    if(camera) {
+      camera.far = viewDistance;
+      camera.updateProjectionMatrix();
+    }
+  },[viewDistance] )
+
   const search = () => {
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
@@ -151,10 +160,6 @@ export default function App() {
       }
     });
   };
-
-  const { width, height } = useWindowSize();
-
-  console.log(width * height * CLIP_SCALE_FACTOR);
 
   const mouseDownRef = React.useRef([0, 0]);
   const raycaster = new THREE.Raycaster();
@@ -186,24 +191,25 @@ export default function App() {
       event.stopPropagation();
       return;
     }
-    const mouse = {
-      x: ( event.clientX / window.innerWidth ) * 2 - 1,
-      y: -( event.clientY / window.innerHeight ) * 2 + 1
-    }
-
-    raycaster.setFromCamera(mouse, camera);
-    console.log(camera?.position, camera?.rotation);
-    const intersects = raycaster.intersectObjects(collisionGeometry);
-
-    if (intersects.length > 0) {
-      const intersected = intersects[0].object as CollisionSphere;
-      if (selectedId !== intersected.index) {
-        setSelectedId(intersected.index);
-        //console.log("Index: ", intersected.index);
-        //console.log("Point: ", data[intersected.index]);
+    if(camera) {
+      const mouse = {
+        x: ( event.clientX / window.innerWidth ) * 2 - 1,
+        y: -( event.clientY / window.innerHeight ) * 2 + 1
       }
-      else {
-        setSelectedId(null);
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(collisionGeometry);
+
+      if (intersects.length > 0) {
+        const intersected = intersects[0].object as CollisionSphere;
+        if (selectedId !== intersected.index) {
+          setSelectedId(intersected.index);
+          //console.log("Index: ", intersected.index);
+          //console.log("Point: ", data[intersected.index]);
+        }
+        else {
+          setSelectedId(null);
+        }
       }
     }
   }
@@ -215,7 +221,7 @@ export default function App() {
       {!loading && !error && redditData && redditData.length && (
           <div className="vis-container" key={redditData.length}>
             <Canvas concurrent
-                    camera={{position: [0, 0, 40], far: width * height * CLIP_SCALE_FACTOR}}
+                    camera={{position: [0, 0, 40], far: viewDistance}}
                     onCreated={gl => setCamera(gl.camera)}
                     onPointerDown={handlePointerDown}
                     onPointerUp={handleClick}>
@@ -228,6 +234,7 @@ export default function App() {
                     onSelect={setSelectedId}
                     pointResolution={pointResolution}
                     voxelResolution={voxelResolution}
+                    debugVoxels={debugVoxels}
                   />
                 )
             </Canvas>
@@ -348,6 +355,20 @@ export default function App() {
                 </select>
               </div>
               <br />
+              <label htmlFor="viewDistance">
+                {" "}
+                View Distance: {viewDistance}
+              </label>
+              <input
+                id="voxelResSlider"
+                type="range"
+                min={100}
+                max={20000}
+                value={viewDistance}
+                onChange={(event) => setViewDistance(+event.target.value)}
+                step="1"
+              />
+              <br />
               <label htmlFor="voxelResSlider">
                 {" "}
                 Voxel Resolution: {voxelResolution}
@@ -360,6 +381,16 @@ export default function App() {
                 value={voxelResolution}
                 onChange={(event) => setVoxelResolution(+event.target.value)}
                 step="1"
+              />
+              <br />
+              <label htmlFor="debugVoxels">
+                Show Voxel Debug:
+              </label>
+              <input
+                id="debugVoxels"
+                type="checkbox"
+                checked={debugVoxels}
+                onChange={(event) => setDebugVoxels(event.target.checked)}
               />
             </form>
             {/*glContext && <DebugStats gl={glContext}/> */}

@@ -1,5 +1,5 @@
 export const SCALE_FACTOR = 1;
-export const CLIP_SCALE_FACTOR = 0.001;
+export const CLIP_SCALE_FACTOR = 0.005;
 
 export const POINT_RADIUS = 1.0 * SCALE_FACTOR;
 
