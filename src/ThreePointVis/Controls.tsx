@@ -69,7 +69,7 @@ export const Controls = memo((props: ControlsProps) => {
     ) {
       internalPosition.lerp(position, ANIMATION_SPEED * delta);
     }
-    else if (position && internalPosition.distanceTo(position) < POSITION_THRESHOLD) {
+    else if (!positionAnimationComplete && position && internalPosition.distanceTo(position) < POSITION_THRESHOLD) {
       internalPosition.sub(position).setLength(POSITION_THRESHOLD).add(position);
       positionAnimationComplete = true;
     }
