@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useMemo } from "react";
 import { SCALE_FACTOR } from "../constants";
+import {Vector2} from "three";
 
 export enum Position {
   LEFT = "LEFT",
@@ -21,8 +22,8 @@ export interface TextProps {
 export function Text(props: TextProps) {
   const { message, x, y, z, position = Position.LEFT } = props;
 
-  let width = 80 + 12 * message.length * SCALE_FACTOR;
-  let height = 69 * SCALE_FACTOR;
+  let width = (30 + 6.5 * message.length) * SCALE_FACTOR;
+  let height = 25 * SCALE_FACTOR;
   const resolutionScaleFactor = 20;
 
   const textCanvas = useMemo(() => {
@@ -33,69 +34,52 @@ export function Text(props: TextProps) {
     canvas.height = height * resolutionScaleFactor;
     context?.scale(resolutionScaleFactor, resolutionScaleFactor);
 
-    let xStart = 0;
-    let yStart = 0;
-    let yEnd = 0;
-    let textBaseline: CanvasTextBaseline = "middle";
-
-    switch (position) {
-      case Position.LEFT:
-        yStart = height / 2;
-        break;
-      case Position.RIGHT:
-        xStart = width / 2;
-        yStart = height / 2;
-        break;
-      case Position.TOP:
-        xStart = width / 2;
-        yStart = 0;
-        textBaseline = "top";
-        break;
-      case Position.BOTTOM:
-        xStart = width / 2;
-        yStart = height / 1.5;
-        yEnd = height;
-        textBaseline = "bottom";
-        break;
-    }
-
     context!.fillStyle = "#bada55";
-    if (position === Position.LEFT || position === Position.RIGHT) {
-      context?.fillRect(xStart, yStart / 2, width / 2, height / 2);
-    } else {
-      context?.fillRect(xStart / 2, yStart, width / 2, height / 2.5);
-    }
+    context?.fillRect(0, 0, width, height);
 
     const fontSize = 12;
     context!.font = `bold ${fontSize}px Arial, sans-serif`;
     context!.fillStyle = "black";
     context!.textAlign = "center";
-    context!.textBaseline = textBaseline;
-    if (position === Position.LEFT || position === Position.RIGHT) {
-      const offset = position === Position.LEFT ? width / 4.5 - 2 : width / 3.5;
-      context?.fillText(message, xStart + offset, yStart);
-    } else {
-      context?.fillText(message, xStart, yEnd);
-    }
+    context!.textBaseline = "middle";
+    context?.fillText(message, width/2, height/2);
     return canvas;
   }, [message, width, height, position]);
 
+  let center = new Vector2(0.5, 0.5);
+
+  switch (position) {
+    case Position.LEFT:
+      center.x = 1.1;
+      break;
+    case Position.RIGHT:
+      center.x = -0.1;
+      break;
+    case Position.TOP:
+      center.y = -0.5;
+      break;
+    case Position.BOTTOM:
+      center.y = 1.6
+      break;
+  }
+
   return (
     <>
-      <sprite
+      {/*<sprite
         scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
         position={[x, y, z]}
-        renderOrder={0}
+        renderOrder={1}
       >
         <spriteMaterial attach="material" transparent={true} depthTest={false} opacity={0.19}>
           <canvasTexture attach="map" key={message} image={textCanvas} />
         </spriteMaterial>
-      </sprite>
+      </sprite> */}
       <sprite
         scale={[width / resolutionScaleFactor, height / resolutionScaleFactor, 1]}
         position={[x, y, z]}
+        center={center}
       >
-        <spriteMaterial attach="material">
+        <spriteMaterial attach="material" transparent={false}>
           <canvasTexture attach="map" key={message} image={textCanvas}  />
         </spriteMaterial>
       </sprite>

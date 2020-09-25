@@ -4,7 +4,7 @@ import { Controls } from "./Controls";
 import { InstancedPoints } from "./InstancedPoints";
 import { Text, Position } from "./Text";
 import { Cluster, Point } from "../App";
-import { useWindowSize} from "../ViewportHooks";
+import { useWindowSize} from "../ViewportHooks"
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 import {ClusterHulls} from "./ClusterHulls";
 import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR} from "../constants";
@@ -89,12 +89,12 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
               position={width < 500 ? Position.BOTTOM : Position.LEFT}
             />
             <mesh
-              renderOrder={1}>
+              renderOrder={2}>
               <sphereBufferGeometry
                 attach="geometry"
                 args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
               />
-              <meshStandardMaterial attach="material" transparent={true} depthTest={false} opacity={0.1} colorWrite={true}  color={"#000000"}/>
+              <meshStandardMaterial attach="material" transparent={true} depthTest={false} opacity={0.1} color={"#000000"}/>
             </mesh>
             <mesh>
               <sphereBufferGeometry
