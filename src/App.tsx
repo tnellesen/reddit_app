@@ -12,7 +12,7 @@ import {
 import {useWindowSize} from "./ViewportHooks";
 import useAxios from "axios-hooks";
 import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
-import {CLIP_SCALE_FACTOR, POINT_RADIUS} from "./constants";
+import { CLIP_SCALE_FACTOR, dataSetList, dataSets, MAX_POINT_RES, POINT_RADIUS } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Canvas} from "react-three-fiber";
 import {Effects} from "./ThreePointVis/Effects";
@@ -71,10 +71,12 @@ export default function App() {
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
+  const [showClusterHulls, setShowClusterHulls] = React.useState(false);
+  const [dataSet, setDataSet] = React.useState<string>(Object.keys(dataSets)[0]);
   const [camera, setCamera] = React.useState();
 
   const [{ data, loading, error }] = useAxios(
-    `https://redditexplorer.com/GetData/dataset:original,n_points:${pointCount}`
+    `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`
   );
 
   React.useEffect(() => {
@@ -211,7 +213,7 @@ export default function App() {
               {usePostProcessing && <Effects useAA useUnrealBloom />}
                   <ThreePointVis
                     data={redditData}
-                    clusters={clusters}
+                    clusters={showClusterHulls ? clusters : []}
                     selectedId={selectedId}
                     onSelect={setSelectedId}
                     pointResolution={pointResolution}
@@ -300,11 +302,27 @@ export default function App() {
                   checked={usePostProcessing}
                   onChange={(event) => setUsePostProcessing(event.target.checked)}
                 />
+                <br />
+                <label htmlFor="showClusterHulls">
+                  Show Cluster Hulls:
+                </label>
+                <input
+                  id="showClusterHulls"
+                  type="checkbox"
+                  checked={showClusterHulls}
+                  onChange={(event) => setShowClusterHulls(event.target.checked)}
+                />
               </div>
               <div>
                 <label htmlFor="numClusters" ># Clusters: </label>
                 <select name="numClusters" id="numClusters" onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}>
                   {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="dataSet" ># Data Set: </label>
+                <select name="dataSet" id="dataSet" onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}>
+                  {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
                 </select>
               </div>
               <div>
