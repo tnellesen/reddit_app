@@ -67,7 +67,7 @@ export default function App() {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
   const [pointResolution, setPointResolution] = React.useState(
-    Math.max(Math.min(Math.floor(window.innerWidth / 50), 32), 1)
+    Math.max(Math.min(Math.floor(window.innerWidth / 69), 32), 1)
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
