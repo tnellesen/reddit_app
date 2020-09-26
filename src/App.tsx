@@ -75,7 +75,7 @@ export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
   const [clusters, setClusters] = React.useState<Cluster[]>([]);
   const [clusterIndex, setClusterIndex] = React.useState<number>(0);
-  const [pointCount, setPointCoint] = React.useState<number>(10000);
+  const [pointCount, setPointCoint] = React.useState<number>(25000);
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
   const [searchTerm, setSearchTerm] = React.useState("");
