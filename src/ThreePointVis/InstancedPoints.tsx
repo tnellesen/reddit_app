@@ -133,9 +133,9 @@ const useMousePointInteraction = (
     if (selectedIds.includes(id)) { //not sure about this
       onSelect(selectedIds);
     } else if (id || id === 0) {
-      const res = selectedIds;
-      res.push(id);
-      onSelect(res);
+      const newSelectedIds = [...selectedIds];
+      newSelectedIds.push(id);
+      onSelect(newSelectedIds);
     }
   };
 

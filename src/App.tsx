@@ -167,11 +167,11 @@ export default function App() {
   const search = () => {
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
-        const res = selectedIds;
-        res.push(point.id);
-        console.log(res);
-        console.log(res[res.length-1]);
-        setSelectedIds(res);
+        const newSelectedIds = [...selectedIds];
+        newSelectedIds.push(point.id);
+        console.log(newSelectedIds);
+        console.log(newSelectedIds[newSelectedIds.length-1]);
+        setSelectedIds(newSelectedIds);
       }
     });
   };
@@ -218,20 +218,20 @@ export default function App() {
       if (intersects.length > 0) {
         const intersected = intersects[0].object as CollisionSphere;
         if (!selectedIds.includes(intersected.index)) {
-          const res = selectedIds;
+          const newSelectedIds = [...selectedIds];
           console.log("selectedIds:", selectedIds);
-          console.log("res:", res);
-          res.push(intersected.index);
-          console.log("res:", res);
+          console.log("res:", newSelectedIds);
+          newSelectedIds.push(intersected.index);
+          console.log("res:", newSelectedIds);
           //console.log("res:", res.push(intersected.index));
-          setSelectedIds(res);
+          setSelectedIds(newSelectedIds);
           console.log("selectedIds:", selectedIds);
           //console.log("Index: ", intersected.index);
           //console.log("Point: ", redditData[intersected.index]);
         }
         else {
-          const res = selectedIds;
-          setSelectedIds(res.filter(id => id !== intersected.index));
+          const newSelectedIds = [...selectedIds];
+          setSelectedIds(newSelectedIds.filter(id => id !== intersected.index));
         }
       }
     }
