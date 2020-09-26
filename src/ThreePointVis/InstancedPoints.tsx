@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as THREE from "three";
-import { SelectedIds, SelectHandler } from "./ThreePointVis";
+import {SelectedIds, SelectedPoints, SelectHandler} from "./ThreePointVis";
 import { MouseEvent, useThree, useFrame, Camera } from "react-three-fiber";
 import { Point } from "../App";
 import { Frustum, Matrix4, Vector3, InstancedBufferAttribute } from "three";
@@ -9,7 +9,7 @@ import {MutableRefObject, useEffect, useState} from "react";
 
 interface InstancedPointsProps {
   data: Point[];
-  selectedIds: SelectedIds;
+  selectedPoints: SelectedPoints;
   onSelect: SelectHandler;
   enableCulling?: boolean;
   pointSegments: number;
@@ -104,8 +104,9 @@ const updateColors = (
 };
 
 const useMousePointInteraction = (
-  selectedIds: SelectedIds,
+  selectedPoints: Point[],
   onSelect: SelectHandler,
+  data: Point[],
   pointIndexToId: number[]
 ) => {
   // track mousedown position to skip click handlers on drags
@@ -130,12 +131,15 @@ const useMousePointInteraction = (
 
     const id = instanceId !== undefined ? pointIndexToId[instanceId] : -1;
 
-    if (selectedIds.includes(id)) { //not sure about this
-      onSelect(selectedIds);
-    } else if (id || id === 0) {
-      const newSelectedIds = [...selectedIds];
-      newSelectedIds.push(id);
-      onSelect(newSelectedIds);
+    const selectedIds = selectedPoints.map(point => point.id);
+    if (!selectedIds.includes(id)) {
+      const newSelectedPoints = [...selectedPoints];
+      newSelectedPoints.push(data[id]);
+      onSelect(newSelectedPoints);
+    }
+    else {
+      const newSelectedPoints = [...selectedPoints];
+      onSelect(newSelectedPoints.filter(point => point.id !== id));
     }
   };
 
@@ -143,7 +147,7 @@ const useMousePointInteraction = (
 };
 
 export const InstancedPoints = (props: InstancedPointsProps) => {
-  const { data, selectedIds, onSelect, enableCulling, pointSegments } = props;
+  const { data, selectedPoints, onSelect, enableCulling, pointSegments } = props;
   const pointIndexToId = data.map((point) => point.id);
 
   const meshRef = React.useRef<THREE.InstancedMesh>();
@@ -170,26 +174,27 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
         pointIndexToId,
         colorArray,
         colorAttrib,
-        selectedIds
+        selectedPoints.map(point => point.id)
       );
     }
   });
 
   const { handleClick, handlePointerDown } = useMousePointInteraction(
-    selectedIds,
+    selectedPoints,
     onSelect,
+    data,
     pointIndexToId
   );
 
 
-  const renderInstancedMesh = selectedIds.map(
-      function(id) {
+  const renderInstancedMesh = selectedPoints.map(
+      function(point) {
         return(
             <group
                 position={[
-                  data[id].x,
-                  data[id].y,
-                  data[id].z
+                  point.x,
+                  point.y,
+                  point.z
                 ]}
             >
               <pointLight
@@ -212,7 +217,7 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
   )
 
   console.log("renderInstancedMesh:", renderInstancedMesh);
-  console.log("selectedIds:", selectedIds);
+  console.log("selectedPoints:", selectedPoints);
   return (
     <>
       <instancedMesh
@@ -240,7 +245,7 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
           </sphereBufferGeometry>
           <meshStandardMaterial attach="material" vertexColors/>
       </instancedMesh>
-      {selectedIds.length > 0 && (
+      {selectedPoints.length > 0 && (
         renderInstancedMesh
       )}
     </>

@@ -2,7 +2,7 @@ import * as React from "react";
 import * as THREE from "three";
 import { Point } from "../App";
 import {clusterColors, POINT_RADIUS} from "../constants";
-import {InstancedBufferAttribute, MeshStandardMaterial, Object3D, Vector3} from "three";
+import {InstancedBufferAttribute, MeshLambertMaterial, Object3D, Vector3} from "three";
 import {memo, useMemo} from "react";
 
 interface VoxelInstancedPointsProps {
@@ -79,7 +79,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
 
   // re-use for instance computations
   const scratchObject3D = useMemo(() => new Object3D(), []);
-  const sharedMaterial = useMemo(() => new MeshStandardMaterial({vertexColors: true}), []);
+  const sharedMaterial = useMemo(() => new MeshLambertMaterial({vertexColors: true}), []);
 
   React.useEffect(() => {
     let numEmptyVoxels = 0;
@@ -122,7 +122,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
     console.log("Total Voxels: ", voxels.length);
     console.log("Empty Voxels: ", numEmptyVoxels);
     console.log("Percent Empty Voxels ", (numEmptyVoxels/voxels.length) * 100);
-  }, [voxels, scratchObject3D, colorArrays]);
+  }, [voxels, scratchObject3D, colorArrays, debugVoxels]);
 
   return (
     <>

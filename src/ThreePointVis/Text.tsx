@@ -44,7 +44,7 @@ export function Text(props: TextProps) {
     context!.textBaseline = "middle";
     context?.fillText(message, width/2, height/2);
     return canvas;
-  }, [message, width, height, position]);
+  }, [message, width, height]);
 
   let center = new Vector2(0.5, 0.5);
 

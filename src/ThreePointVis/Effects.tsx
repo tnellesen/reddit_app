@@ -19,7 +19,7 @@ interface EffectsProps {
 export function Effects(props: EffectsProps) {
   const composer = useRef<EffectComposer>();
   const { scene, gl, size, camera } = useThree();
-  const aspectScalar = 4;
+  const aspectScalar = 8;
   const aspect = useMemo(() => new THREE.Vector2(size.width/aspectScalar, size.height/aspectScalar), [
     size
   ]);
@@ -32,9 +32,9 @@ export function Effects(props: EffectsProps) {
 
   const unrealBloom = {
     resolution: aspect,
-    strength: 0.5,
+    strength: 0.4,
     radius: 0.01,
-    threshold: 0.4
+    threshold: 0.19
   };
 
   const bloom = {
