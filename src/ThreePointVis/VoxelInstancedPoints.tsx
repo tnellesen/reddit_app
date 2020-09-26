@@ -103,9 +103,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
             mesh.setMatrixAt(j, scratchObject3D.matrix);
           }
 
-          const boundingBox = new THREE.Box3().setFromPoints(points);
-          const center = boundingBox.getCenter(new THREE.Vector3());
-          mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points, center);
+          mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points);
           mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, POINT_RADIUS);
           mesh.instanceMatrix.needsUpdate = true;
           mesh.frustumCulled = true;

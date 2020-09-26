@@ -75,9 +75,9 @@ export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
   const [clusters, setClusters] = React.useState<Cluster[]>([]);
   const [clusterIndex, setClusterIndex] = React.useState<number>(0);
-  const [pointCount, setPointCoint] = React.useState<number>(25000);
+  const [pointCount, setPointCount] = React.useState<number>(25000);
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
-  const [selectedId, setSelectedId] = React.useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
   const [pointResolution, setPointResolution] = React.useState(
@@ -99,7 +99,7 @@ export default function App() {
   );
 
   React.useEffect(() => {
-    const newData = data
+    const newRedditData: Point[] = data
       ? data.data.map((point: any, index: number) => {
           return {
             id: index,
@@ -128,8 +128,15 @@ export default function App() {
         )
       : [];
 
-    if(newData && newData.length) {
-      setRedditData(newData);
+    if(newRedditData && newRedditData.length) {
+      //const newSelectedNames = newRedditData.filter(point => redditData.map(point => point.subreddit).includes(point.subreddit));
+      const selectedSubreddits = selectedIds.map(id => redditData[id].subreddit);
+      const newSelectedIds: number[] = newRedditData.filter(point => selectedSubreddits.includes(point.subreddit)).map(point => point.id);
+
+          //[...selectedIds].filter(id => newRedditData.map(point => point.name).includes(redditData[id].name));
+
+      setRedditData(newRedditData);
+      setSelectedIds(newSelectedIds);
     }
     if(newClusters && newClusters.length) {
       setClusters(newClusters);
@@ -167,7 +174,11 @@ export default function App() {
   const search = () => {
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
-        setSelectedId(point.id);
+        const newSelectedIds = [...selectedIds];
+        newSelectedIds.push(point.id);
+        console.log(newSelectedIds);
+        console.log(newSelectedIds[newSelectedIds.length-1]);
+        setSelectedIds(newSelectedIds);
       }
     });
   };
@@ -213,13 +224,21 @@ export default function App() {
 
       if (intersects.length > 0) {
         const intersected = intersects[0].object as CollisionSphere;
-        if (selectedId !== intersected.index) {
-          setSelectedId(intersected.index);
+        if (!selectedIds.includes(intersected.index)) {
+          const newSelectedIds = [...selectedIds];
+          console.log("selectedIds:", selectedIds);
+          console.log("res:", newSelectedIds);
+          newSelectedIds.push(intersected.index);
+          console.log("res:", newSelectedIds);
+          //console.log("res:", res.push(intersected.index));
+          setSelectedIds(newSelectedIds);
+          console.log("selectedIds:", selectedIds);
           //console.log("Index: ", intersected.index);
-          //console.log("Point: ", data[intersected.index]);
+          //console.log("Point: ", redditData[intersected.index]);
         }
         else {
-          setSelectedId(null);
+          const newSelectedIds = [...selectedIds];
+          setSelectedIds(newSelectedIds.filter(id => id !== intersected.index));
         }
       }
     }
@@ -241,8 +260,8 @@ export default function App() {
                   <ThreePointVis
                     data={redditData}
                     clusters={showClusterHulls ? clusters : []}
-                    selectedId={selectedId}
-                    onSelect={setSelectedId}
+                    selectedIds={selectedIds}
+                    onSelect={setSelectedIds}
                     pointResolution={pointResolution}
                     voxelResolution={voxelResolution}
                     debugVoxels={debugVoxels}
@@ -263,22 +282,32 @@ export default function App() {
         </div>
         {showControls && (
           <>
-            {!loading && data && selectedId !== null && (
+            {!loading && data && selectedIds.length !== 0 && (
               <div className="selected-point">
                 You selected{" "}
                 <a
-                  href={`https://www.reddit.com/r/${redditData[selectedId].subreddit}`}
+                  href={`https://www.reddit.com/r/${redditData[selectedIds[selectedIds.length-1]].subreddit}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <strong>{redditData[selectedId].subreddit}</strong>
+                  <strong>{redditData[selectedIds[selectedIds.length-1]].subreddit}</strong>
                 </a>
-                <p>X: {redditData[selectedId].x}</p>
-                <p>Y: {redditData[selectedId].y}</p>
-                <p>Z: {redditData[selectedId].z}</p>
-                <p>% NSFW: {redditData[selectedId].percentNsfw}</p>
+                <p>X: {redditData[selectedIds[selectedIds.length-1]].x}</p>
+                <p>Y: {redditData[selectedIds[selectedIds.length-1]].y}</p>
+                <p>Z: {redditData[selectedIds[selectedIds.length-1]].z}</p>
+                <p>% NSFW: {redditData[selectedIds[selectedIds.length-1]].percentNsfw}</p>
               </div>
             )}
+            {selectedIds.length > 0 &&
+              (<>
+                <button
+                    onClick={() => setSelectedIds([])}>
+                  Clear Selection
+                </button>
+                <br />
+                </>)
+            }
+            <br />
             <form
               onSubmit={(event) => {
                 search();
@@ -290,7 +319,8 @@ export default function App() {
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
               <button>Search</button>
-              <div>
+            </form>
+            <div>
                 <label htmlFor="resolutionSlider">
                   {" "}
                   Point Resolution: {pointResolution}
@@ -318,9 +348,10 @@ export default function App() {
                   value={maxPercentNSFW}
                   onChange={(event) => {
                     setMaxPercentNSFW(+event.target.value);
-                    if(selectedId && redditData[selectedId].percentNsfw > +event.target.value) {
-                      setSelectedId(null);
-                    }
+                    //if(redditData.filter(point => point.percentNsfw > +event.target.value).length > 0) {
+                    selectedIds.filter(id => redditData[id].percentNsfw < +event.target.value)
+                    setSelectedIds(selectedIds);
+                    //}
                   }}
                 />
                 <br />
@@ -363,8 +394,8 @@ export default function App() {
               <div>
                 <label htmlFor="pointCount" ># Points: </label>
                 <select name="pointCount" id="pointCount" onChange={(event) => {
-                  setPointCoint(+event.target.value);
-                  setSelectedId(null);
+                  //setSelectedIds([]);
+                  setPointCount(+event.target.value);
                 }}
                 value={pointCount}>
                   {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
@@ -408,7 +439,6 @@ export default function App() {
                 checked={debugVoxels}
                 onChange={(event) => setDebugVoxels(event.target.checked)}
               />
-            </form>
             {/*glContext && <DebugStats gl={glContext}/> */}
           </>
         )}

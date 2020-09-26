@@ -4,25 +4,28 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import useEventListener from "@use-it/event-listener";
 import * as THREE from "three";
 //import { useState } from "react";
-import { SCALE_FACTOR } from "../constants";
 import {memo} from "react";
 
 interface ControlsProps {
   target: THREE.Vector3 | null;
   position: THREE.Vector3 | null;
+  distance: number;
 }
 
 extend({ OrbitControls });
 
-const TARGET_THRESHOLD = 0.1 * SCALE_FACTOR;
+const TARGET_THRESHOLD = 0.1;
 const TARGET_THRESHOLD_MULTIPLIER = 200;
-const POSITION_THRESHOLD = 12 * SCALE_FACTOR;
+const POSITION_THRESHOLD_OFFSET = 12;
+const POSITION_THRESHOLD_SCALER = 1.02;
 const ANIMATION_SPEED = 5;
 
 const origin = new THREE.Vector3(0, 0, 0);
 
 export const Controls = memo((props: ControlsProps) => {
-  const { target, position } = props;
+  const { target, position, distance } = props;
+
+  const cameraDistance = POSITION_THRESHOLD_OFFSET + POSITION_THRESHOLD_SCALER * distance;
 
   const controls = React.useRef<OrbitControls>();
 
@@ -64,13 +67,13 @@ export const Controls = memo((props: ControlsProps) => {
       && target
       && internalTarget.distanceTo(target) <
         TARGET_THRESHOLD * TARGET_THRESHOLD_MULTIPLIER
-      && internalPosition.distanceTo(position) > POSITION_THRESHOLD
+      && internalPosition.distanceTo(position) > cameraDistance
 
     ) {
       internalPosition.lerp(position, ANIMATION_SPEED * delta);
     }
-    else if (!positionAnimationComplete && position && internalPosition.distanceTo(position) < POSITION_THRESHOLD) {
-      internalPosition.sub(position).setLength(POSITION_THRESHOLD).add(position);
+    else if (!positionAnimationComplete && position && internalPosition.distanceTo(position) < cameraDistance) {
+      internalPosition.sub(position).setLength(cameraDistance).add(position);
       positionAnimationComplete = true;
     }
 

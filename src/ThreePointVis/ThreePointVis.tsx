@@ -9,17 +9,17 @@ import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 import {ClusterHulls} from "./ClusterHulls";
 import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
 import {memo, useMemo} from "react";
-import {Color} from "three";
+import {Color, Vector3} from "three";
 
-export type SelectedId = number | null;
+export type SelectedIds = number[];
 export type SelectHandler = (
-  index: SelectedId | ((prevVar: SelectedId) => SelectedId)
+  index: SelectedIds | ((prevVar: SelectedIds) => SelectedIds)
 ) => void;
 
 interface ThreePointVisProps {
   data: Point[];
   clusters: Cluster[];
-  selectedId: SelectedId;
+  selectedIds: SelectedIds;
   onSelect: SelectHandler;
   pointResolution: number;
   voxelResolution: number;
@@ -27,30 +27,95 @@ interface ThreePointVisProps {
 }
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
-  const { data, selectedId, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
-
+  const { data, selectedIds, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
 
 
   const selected =
-    selectedId !== null && data[selectedId].include ? data[selectedId] : null;
+    selectedIds.length > 0 &&
+    data.filter(point => selectedIds.includes(point.id)).filter(point => point.include).length > 0
+        ? data.filter(point => selectedIds.includes(point.id))
+        : [];
 
-  const cameraTarget =
-    selected !== null
-      ? new THREE.Vector3(selected.x, selected.y, selected.z)
+  const selectedPoints = selectedIds.map(id => new Vector3(data[id].x, data[id].y, data[id].z));
+  const selectedBoundingSphere = new THREE.Sphere().setFromPoints(selectedPoints);
+  selectedBoundingSphere.radius = Math.max(selectedBoundingSphere.radius, 1);
+
+    const cameraTarget =
+    selected.length > 0
+      ? selectedBoundingSphere.center
       : null;
 
   const cameraPosition =
-    selected !== null
-      ? new THREE.Vector3(selected.x, selected.y, selected.z)
+    selected.length > 0
+      ? selectedBoundingSphere.center
       : null;
 
   const { width } = useWindowSize();
 
   const selectedPointRes = useMemo(() => Math.min(pointResolution*4, MAX_POINT_RES), [pointResolution]);
-    
+
+  console.log(selected);
+
+  const renderSelectedPoints = selected.map(
+      function(point) {
+          return(<group
+              position={[
+                  point.x,
+                  point.y,
+                  point.z
+              ]}
+          >
+              <Text
+                  message={point.subreddit}
+                  x={0}
+                  y={0}
+                  z={0}
+                  position={width < 500 ? Position.BOTTOM : Position.RIGHT}
+              />
+              <mesh renderOrder={2}>
+                  <sphereBufferGeometry
+                      attach="geometry"
+                      args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
+                  />
+                  <meshLambertMaterial attach="material"
+                                       transparent={true}
+                                       emissive={new Color(SELECTED_COLOR)}
+                                       emissiveIntensity={1} depthTest={false} opacity={0.19} color={SELECTED_COLOR}/>
+              </mesh>
+              <mesh renderOrder={5}>
+                  <sphereBufferGeometry
+                      attach="geometry"
+                      args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
+                  />
+                  <meshLambertMaterial attach="material"
+                                       transparent={true}
+                                       color={SELECTED_COLOR}/>
+              </mesh>
+
+
+              <pointLight
+                  distance={19 * SCALE_FACTOR}
+                  position={[0, 0, 0]}
+                  intensity={2.5}
+                  decay={30}
+                  color={SELECTED_COLOR}
+              />
+              <pointLight
+                  distance={10 * SCALE_FACTOR}
+                  position={[0, 0, 0]}
+                  intensity={1.5}
+                  decay={1}
+                  color={SELECTED_COLOR}
+              />
+          </group>)
+      }
+
+  )
+
+
   return (
       <>
-        <Controls target={cameraTarget} position={cameraPosition}/>
+        <Controls target={cameraTarget} position={cameraPosition} distance={selectedBoundingSphere.radius}/>
         <ambientLight color="#ffffff" intensity={0.1}/>
         <hemisphereLight
             color="#ffffff"
@@ -61,7 +126,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
         {clusters && <ClusterHulls clusters={clusters}/>}
         {voxelResolution <= 1
           ? <InstancedPoints
-            selectedId={selectedId}
+            selectedIds={selectedIds}
             onSelect={onSelect}
             data={data}
             enableCulling
@@ -74,56 +139,8 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
             debugVoxels={debugVoxels}
           />}
 
-        {selected !== null && (
-          <group
-            position={[
-              selected.x,
-              selected.y,
-              selected.z
-            ]}
-          >
-            <Text
-              message={selected.subreddit}
-              x={0}
-              y={0}
-              z={0}
-              position={width < 500 ? Position.BOTTOM : Position.RIGHT}
-            />
-            <mesh renderOrder={2}>
-              <sphereBufferGeometry
-                attach="geometry"
-                args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
-              />
-              <meshLambertMaterial attach="material"
-                                    transparent={true}
-                                    emissive={new Color(SELECTED_COLOR)}
-                                    emissiveIntensity={1} depthTest={false} opacity={0.19} color={SELECTED_COLOR}/>
-            </mesh>
-            <mesh renderOrder={5}>
-              <sphereBufferGeometry
-                attach="geometry"
-                args={[POINT_RADIUS*1.02, selectedPointRes, selectedPointRes]}
-              />
-              <meshLambertMaterial attach="material"
-                                   transparent={true}
-                                   color={SELECTED_COLOR}/>
-            </mesh>
-
-
-            <pointLight
-              distance={19 * SCALE_FACTOR}
-              position={[0, 0, 0]}
-              intensity={2.5}
-              decay={30}
-              color={SELECTED_COLOR}
-            />
-            <pointLight
-              distance={10 * SCALE_FACTOR}
-              position={[0, 0, 0]}
-              intensity={1.5}
-              decay={1}
-              color={SELECTED_COLOR}
-            />
-          </group>)}
+        {selected.length > 0 && (
+            renderSelectedPoints
+        )}
       </>)
 });
