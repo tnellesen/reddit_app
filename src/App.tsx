@@ -83,7 +83,7 @@ export default function App() {
   const [pointResolution, setPointResolution] = React.useState(
     Math.floor(Math.max(Math.min(window.innerWidth / 69, MAX_POINT_RES*0.75), 1))
   );
-  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
+  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
@@ -307,14 +307,14 @@ export default function App() {
                 <br />
                 <label htmlFor="nsfwSlider">
                   {" "}
-                  Max % NSFW: {maxPercentNSFW}
+                  Max % NSFW Threads: {maxPercentNSFW}
                 </label>
                 <input
                   id="nsfwSlider"
                   type="range"
                   min={0}
                   max={100}
-                  step={0.01}
+                  step={0.1}
                   value={maxPercentNSFW}
                   onChange={(event) => {
                     setMaxPercentNSFW(+event.target.value);
