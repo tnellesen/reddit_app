@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -69,7 +69,7 @@ const getMesh = (group: Group | Object3D): Mesh => {
   return new Mesh(geometry, material);
 };
 
-export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000, 1000000];
+export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000];
 
 export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
@@ -86,6 +86,7 @@ export default function App() {
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
+  const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
@@ -276,6 +277,7 @@ export default function App() {
                     pointResolution={pointResolution}
                     voxelResolution={voxelResolution}
                     debugVoxels={debugVoxels}
+                    usePerPointLighting={usePerPointLighting}
                   />
                 )
             </Canvas>
@@ -383,6 +385,16 @@ export default function App() {
                   type="checkbox"
                   checked={usePostProcessing}
                   onChange={(event) => setUsePostProcessing(event.target.checked)}
+                />
+                <br />
+                <label htmlFor="usePerPointLighting">
+                  Per Point Lighting:
+                </label>
+                <input
+                  id="usePerPointLighting"
+                  type="checkbox"
+                  checked={usePerPointLighting}
+                  onChange={(event) => setUsePerPointLighting(event.target.checked)}
                 />
                 <br />
                 <label htmlFor="showClusterHulls">

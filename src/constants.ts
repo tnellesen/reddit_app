@@ -20,6 +20,9 @@ export const dataSets: dataSetList = {
   New25: "new_0.25"
 }
 
+// Threshold for auto disabling expensive graphical effects
+export const MOBILE_THRESHOLD_WIDTH = 950; // A little under half 1080p
+
 //https://coolors.co/263b3b-0b195e-bc3c00-773b08-541818-340534-0e2412-3b0c1a-790579-0d620b
 export const clusterColors = [
   "#263b3b",
