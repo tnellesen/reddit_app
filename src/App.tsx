@@ -99,7 +99,7 @@ export default function App() {
   );
 
   React.useEffect(() => {
-    const newData = data
+    const newRedditData: Point[] = data
       ? data.data.map((point: any, index: number) => {
           return {
             id: index,
@@ -128,8 +128,15 @@ export default function App() {
         )
       : [];
 
-    if(newData && newData.length) {
-      setRedditData(newData);
+    if(newRedditData && newRedditData.length) {
+      //const newSelectedNames = newRedditData.filter(point => redditData.map(point => point.subreddit).includes(point.subreddit));
+      const selectedSubreddits = selectedIds.map(id => redditData[id].subreddit);
+      const newSelectedIds: number[] = newRedditData.filter(point => selectedSubreddits.includes(point.subreddit)).map(point => point.id);
+
+          //[...selectedIds].filter(id => newRedditData.map(point => point.name).includes(redditData[id].name));
+
+      setRedditData(newRedditData);
+      setSelectedIds(newSelectedIds);
     }
     if(newClusters && newClusters.length) {
       setClusters(newClusters);
@@ -291,6 +298,16 @@ export default function App() {
                 <p>% NSFW: {redditData[selectedIds[selectedIds.length-1]].percentNsfw}</p>
               </div>
             )}
+            {selectedIds.length > 0 &&
+              (<>
+                <button
+                    onClick={() => setSelectedIds([])}>
+                  Clear Selection
+                </button>
+                <br />
+                </>)
+            }
+            <br />
             <form
               onSubmit={(event) => {
                 search();
@@ -302,7 +319,8 @@ export default function App() {
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
               <button>Search</button>
-              <div>
+            </form>
+            <div>
                 <label htmlFor="resolutionSlider">
                   {" "}
                   Point Resolution: {pointResolution}
@@ -330,10 +348,10 @@ export default function App() {
                   value={maxPercentNSFW}
                   onChange={(event) => {
                     setMaxPercentNSFW(+event.target.value);
-                    if(redditData.filter(point => point.percentNsfw > +event.target.value).length > 0) {
-                      selectedIds.filter(id => redditData[id].percentNsfw < +event.target.value)
-                      setSelectedIds(selectedIds);
-                    }
+                    //if(redditData.filter(point => point.percentNsfw > +event.target.value).length > 0) {
+                    selectedIds.filter(id => redditData[id].percentNsfw < +event.target.value)
+                    setSelectedIds(selectedIds);
+                    //}
                   }}
                 />
                 <br />
@@ -376,13 +394,8 @@ export default function App() {
               <div>
                 <label htmlFor="pointCount" ># Points: </label>
                 <select name="pointCount" id="pointCount" onChange={(event) => {
-                  if (pointCount < +event.target.value) {
-                    setSelectedIds(selectedIds);
-                  } else {
-                    setSelectedIds([]);
-                  }
+                  //setSelectedIds([]);
                   setPointCount(+event.target.value);
-
                 }}
                 value={pointCount}>
                   {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
@@ -426,7 +439,6 @@ export default function App() {
                 checked={debugVoxels}
                 onChange={(event) => setDebugVoxels(event.target.checked)}
               />
-            </form>
             {/*glContext && <DebugStats gl={glContext}/> */}
           </>
         )}

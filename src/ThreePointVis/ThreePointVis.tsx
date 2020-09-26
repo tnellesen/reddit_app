@@ -9,7 +9,7 @@ import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 import {ClusterHulls} from "./ClusterHulls";
 import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
 import {memo, useMemo} from "react";
-import {Color} from "three";
+import {Color, Vector3} from "three";
 
 export type SelectedIds = number[];
 export type SelectHandler = (
@@ -36,14 +36,18 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
         ? data.filter(point => selectedIds.includes(point.id))
         : [];
 
-  const cameraTarget =
+  const selectedPoints = selectedIds.map(id => new Vector3(data[id].x, data[id].y, data[id].z));
+  const selectedBoundingSphere = new THREE.Sphere().setFromPoints(selectedPoints);
+  selectedBoundingSphere.radius = Math.max(selectedBoundingSphere.radius, 1);
+
+    const cameraTarget =
     selected.length > 0
-      ? new THREE.Vector3(selected[selected.length-1].x, selected[selected.length-1].y, selected[selected.length-1].z)
+      ? selectedBoundingSphere.center
       : null;
 
   const cameraPosition =
     selected.length > 0
-      ? new THREE.Vector3(selected[selected.length-1].x, selected[selected.length-1].y, selected[selected.length-1].z)
+      ? selectedBoundingSphere.center
       : null;
 
   const { width } = useWindowSize();
@@ -111,7 +115,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
 
   return (
       <>
-        <Controls target={cameraTarget} position={cameraPosition}/>
+        <Controls target={cameraTarget} position={cameraPosition} distance={selectedBoundingSphere.radius}/>
         <ambientLight color="#ffffff" intensity={0.1}/>
         <hemisphereLight
             color="#ffffff"
