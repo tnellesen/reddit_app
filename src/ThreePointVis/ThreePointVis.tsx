@@ -11,15 +11,16 @@ import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../cons
 import {memo, useMemo} from "react";
 import {Color, Vector3} from "three";
 
+export type SelectedPoints = Point[];
 export type SelectedIds = number[];
 export type SelectHandler = (
-  index: SelectedIds | ((prevVar: SelectedIds) => SelectedIds)
+  point: SelectedPoints | ((prevVar: SelectedPoints) => SelectedPoints)
 ) => void;
 
 interface ThreePointVisProps {
   data: Point[];
   clusters: Cluster[];
-  selectedIds: SelectedIds;
+  selectedPoints: SelectedPoints;
   onSelect: SelectHandler;
   pointResolution: number;
   voxelResolution: number;
@@ -27,26 +28,19 @@ interface ThreePointVisProps {
 }
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
-  const { data, selectedIds, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
+  const { data, selectedPoints, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
 
-
-  const selected =
-    selectedIds.length > 0 &&
-    data.filter(point => selectedIds.includes(point.id)).filter(point => point.include).length > 0
-        ? data.filter(point => selectedIds.includes(point.id))
-        : [];
-
-  const selectedPoints = selectedIds.map(id => new Vector3(data[id].x, data[id].y, data[id].z));
-  const selectedBoundingSphere = new THREE.Sphere().setFromPoints(selectedPoints);
+  const selectedPointVectors = selectedPoints.map(point => new Vector3(point.x, point.y, point.z));
+  const selectedBoundingSphere = new THREE.Sphere().setFromPoints(selectedPointVectors);
   selectedBoundingSphere.radius = Math.max(selectedBoundingSphere.radius, 1);
 
     const cameraTarget =
-    selected.length > 0
+      selectedPoints.length > 0
       ? selectedBoundingSphere.center
       : null;
 
   const cameraPosition =
-    selected.length > 0
+    selectedPoints.length > 0
       ? selectedBoundingSphere.center
       : null;
 
@@ -54,11 +48,10 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
 
   const selectedPointRes = useMemo(() => Math.min(pointResolution*4, MAX_POINT_RES), [pointResolution]);
 
-  console.log(selected);
-
-  const renderSelectedPoints = selected.map(
+  const renderSelectedPoints = selectedPoints.map(
       function(point) {
           return(<group
+              key={point.id}
               position={[
                   point.x,
                   point.y,
@@ -91,19 +84,10 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
                                        transparent={true}
                                        color={SELECTED_COLOR}/>
               </mesh>
-
-
-              <pointLight
-                  distance={19 * SCALE_FACTOR}
-                  position={[0, 0, 0]}
-                  intensity={2.5}
-                  decay={30}
-                  color={SELECTED_COLOR}
-              />
               <pointLight
                   distance={10 * SCALE_FACTOR}
                   position={[0, 0, 0]}
-                  intensity={1.5}
+                  intensity={1.9}
                   decay={1}
                   color={SELECTED_COLOR}
               />
@@ -119,14 +103,14 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
         <ambientLight color="#ffffff" intensity={0.1}/>
         <hemisphereLight
             color="#ffffff"
-            skyColor={new THREE.Color("#ffffbb")}
-            groundColor={new THREE.Color("#080820")}
+            skyColor={new THREE.Color("#ffffff")}
+            groundColor={new THREE.Color("#080808")}
             intensity={1.0}
         />
         {clusters && <ClusterHulls clusters={clusters}/>}
         {voxelResolution <= 1
           ? <InstancedPoints
-            selectedIds={selectedIds}
+            selectedPoints={selectedPoints}
             onSelect={onSelect}
             data={data}
             enableCulling
@@ -139,7 +123,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
             debugVoxels={debugVoxels}
           />}
 
-        {selected.length > 0 && (
+        {selectedPoints.length > 0 && (
             renderSelectedPoints
         )}
       </>)

@@ -77,9 +77,10 @@ export default function App() {
   const [clusterIndex, setClusterIndex] = React.useState<number>(0);
   const [pointCount, setPointCount] = React.useState<number>(25000);
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedPoints, setSelectedPoints] = React.useState<Point[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
+  const [multiSelect, setMultiSelect] = React.useState(false);
   const [pointResolution, setPointResolution] = React.useState(
     Math.floor(Math.max(Math.min(window.innerWidth / 69, MAX_POINT_RES*0.75), 1))
   );
@@ -129,20 +130,22 @@ export default function App() {
       : [];
 
     if(newRedditData && newRedditData.length) {
-      //const newSelectedNames = newRedditData.filter(point => redditData.map(point => point.subreddit).includes(point.subreddit));
-      const selectedSubreddits = selectedIds.map(id => redditData[id].subreddit);
-      const newSelectedIds: number[] = newRedditData.filter(point => selectedSubreddits.includes(point.subreddit)).map(point => point.id);
-
-          //[...selectedIds].filter(id => newRedditData.map(point => point.name).includes(redditData[id].name));
-
       setRedditData(newRedditData);
-      setSelectedIds(newSelectedIds);
     }
     if(newClusters && newClusters.length) {
       setClusters(newClusters);
     }
     setClusterCounts(newClusterCounts);
   }, [maxPercentNSFW, data, clusterIndex]);
+
+
+  React.useEffect(() => {
+    const selectedSubreddits = selectedPoints.map(point => point.subreddit);
+    const newSelectedPoints: Point[] = redditData.filter(point => selectedSubreddits.includes(point.subreddit));
+
+    setSelectedPoints(newSelectedPoints);
+  }, [redditData])
+
 
   React.useEffect(() => {
     const clusterCount = clusterCounts[clusterIndex];
@@ -169,16 +172,19 @@ export default function App() {
       camera.far = viewDistance;
       camera.updateProjectionMatrix();
     }
-  },[viewDistance] )
+  },[viewDistance, camera] )
 
   const search = () => {
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
-        const newSelectedIds = [...selectedIds];
-        newSelectedIds.push(point.id);
-        console.log(newSelectedIds);
-        console.log(newSelectedIds[newSelectedIds.length-1]);
-        setSelectedIds(newSelectedIds);
+        if(multiSelect) {
+          const newSelectedPoints = [...selectedPoints];
+          newSelectedPoints.push(point);
+          setSelectedPoints(newSelectedPoints);
+        }
+        else {
+          setSelectedPoints([point]);
+        }
       }
     });
   };
@@ -224,21 +230,26 @@ export default function App() {
 
       if (intersects.length > 0) {
         const intersected = intersects[0].object as CollisionSphere;
-        if (!selectedIds.includes(intersected.index)) {
-          const newSelectedIds = [...selectedIds];
-          console.log("selectedIds:", selectedIds);
-          console.log("res:", newSelectedIds);
-          newSelectedIds.push(intersected.index);
-          console.log("res:", newSelectedIds);
-          //console.log("res:", res.push(intersected.index));
-          setSelectedIds(newSelectedIds);
-          console.log("selectedIds:", selectedIds);
-          //console.log("Index: ", intersected.index);
-          //console.log("Point: ", redditData[intersected.index]);
+        const selectedIds = selectedPoints.map(point => point.id);
+        const clickedId = intersected.index;
+        if(multiSelect || event.ctrlKey) {
+          if (!selectedIds.includes(clickedId)) {
+            const newSelectedPoints = [...selectedPoints];
+            newSelectedPoints.push(redditData[clickedId]);
+            setSelectedPoints(newSelectedPoints);
+          }
+          else {
+            const newSelectedPoints = [...selectedPoints];
+            setSelectedPoints(newSelectedPoints.filter(point => point.id !== clickedId));
+          }
         }
         else {
-          const newSelectedIds = [...selectedIds];
-          setSelectedIds(newSelectedIds.filter(id => id !== intersected.index));
+          if (selectedIds.length !== 1 || selectedIds[0] !== clickedId) {
+            setSelectedPoints([redditData[clickedId]]);
+          }
+          else {
+            setSelectedPoints([]);
+          }
         }
       }
     }
@@ -260,8 +271,8 @@ export default function App() {
                   <ThreePointVis
                     data={redditData}
                     clusters={showClusterHulls ? clusters : []}
-                    selectedIds={selectedIds}
-                    onSelect={setSelectedIds}
+                    selectedPoints={selectedPoints}
+                    onSelect={setSelectedPoints}
                     pointResolution={pointResolution}
                     voxelResolution={voxelResolution}
                     debugVoxels={debugVoxels}
@@ -282,26 +293,26 @@ export default function App() {
         </div>
         {showControls && (
           <>
-            {!loading && data && selectedIds.length !== 0 && (
+            {!loading && data && selectedPoints.length !== 0 && (
               <div className="selected-point">
                 You selected{" "}
                 <a
-                  href={`https://www.reddit.com/r/${redditData[selectedIds[selectedIds.length-1]].subreddit}`}
+                  href={`https://www.reddit.com/r/${selectedPoints[selectedPoints.length-1].subreddit}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <strong>{redditData[selectedIds[selectedIds.length-1]].subreddit}</strong>
+                  <strong>{selectedPoints[selectedPoints.length-1].subreddit}</strong>
                 </a>
-                <p>X: {redditData[selectedIds[selectedIds.length-1]].x}</p>
-                <p>Y: {redditData[selectedIds[selectedIds.length-1]].y}</p>
-                <p>Z: {redditData[selectedIds[selectedIds.length-1]].z}</p>
-                <p>% NSFW: {redditData[selectedIds[selectedIds.length-1]].percentNsfw}</p>
+                <p>X: {selectedPoints[selectedPoints.length-1].x}</p>
+                <p>Y: {selectedPoints[selectedPoints.length-1].y}</p>
+                <p>Z: {selectedPoints[selectedPoints.length-1].z}</p>
+                <p>% NSFW: {selectedPoints[selectedPoints.length-1].percentNsfw}</p>
               </div>
             )}
-            {selectedIds.length > 0 &&
+            {selectedPoints.length > 0 &&
               (<>
                 <button
-                    onClick={() => setSelectedIds([])}>
+                    onClick={() => setSelectedPoints([])}>
                   Clear Selection
                 </button>
                 <br />
@@ -319,6 +330,16 @@ export default function App() {
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
               <button>Search</button>
+              <br/>
+              <label htmlFor="multiSelect">
+                Multi Select:
+              </label>
+              <input
+                id="multiSelect"
+                type="checkbox"
+                checked={multiSelect}
+                onChange={(event) => setMultiSelect(event.target.checked)}
+              />
             </form>
             <div>
                 <label htmlFor="resolutionSlider">
@@ -348,9 +369,8 @@ export default function App() {
                   value={maxPercentNSFW}
                   onChange={(event) => {
                     setMaxPercentNSFW(+event.target.value);
-                    //if(redditData.filter(point => point.percentNsfw > +event.target.value).length > 0) {
-                    selectedIds.filter(id => redditData[id].percentNsfw < +event.target.value)
-                    setSelectedIds(selectedIds);
+                    selectedPoints.filter(point => point.percentNsfw < +event.target.value)
+                    setSelectedPoints(selectedPoints);
                     //}
                   }}
                 />
