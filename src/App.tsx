@@ -343,134 +343,137 @@ export default function App() {
                 onChange={(event) => setMultiSelect(event.target.checked)}
               />
             </form>
+            <br />
+            <label htmlFor="nsfwSlider">
+              {" "}
+              Max % NSFW Threads: {maxPercentNSFW}
+            </label>
+            <input
+              id="nsfwSlider"
+              type="range"
+              min={0}
+              max={100}
+              step={0.1}
+              value={maxPercentNSFW}
+              onChange={(event) => {
+                setMaxPercentNSFW(+event.target.value);
+                selectedPoints.filter(point => point.percentNsfw < +event.target.value)
+                setSelectedPoints(selectedPoints);
+                //}
+              }}
+            />
             <div>
-                <label htmlFor="resolutionSlider">
-                  {" "}
-                  Point Resolution: {pointResolution}
-                </label>
-                <input
-                  id="resolutionSlider"
-                  type="range"
-                  min="1"
-                  max={MAX_POINT_RES}
-                  value={pointResolution}
-                  onChange={(event) => setPointResolution(+event.target.value)}
-                  step="1"
-                />
-                <br />
-                <label htmlFor="nsfwSlider">
-                  {" "}
-                  Max % NSFW Threads: {maxPercentNSFW}
-                </label>
-                <input
-                  id="nsfwSlider"
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={maxPercentNSFW}
-                  onChange={(event) => {
-                    setMaxPercentNSFW(+event.target.value);
-                    selectedPoints.filter(point => point.percentNsfw < +event.target.value)
-                    setSelectedPoints(selectedPoints);
-                    //}
-                  }}
-                />
-                <br />
-                <label htmlFor="usePostProcessing">
-                  Enable Post FX:
-                </label>
-                <input
-                  id="usePostProcessing"
-                  type="checkbox"
-                  checked={usePostProcessing}
-                  onChange={(event) => setUsePostProcessing(event.target.checked)}
-                />
-                <br />
-                <label htmlFor="usePerPointLighting">
-                  Per Point Lighting:
-                </label>
-                <input
-                  id="usePerPointLighting"
-                  type="checkbox"
-                  checked={usePerPointLighting}
-                  onChange={(event) => setUsePerPointLighting(event.target.checked)}
-                />
-                <br />
-                <label htmlFor="showClusterHulls">
-                  Show Cluster Hulls:
-                </label>
-                <input
-                  id="showClusterHulls"
-                  type="checkbox"
-                  checked={showClusterHulls}
-                  onChange={(event) => setShowClusterHulls(event.target.checked)}
-                />
-              </div>
-              <div>
-                <label htmlFor="numClusters" ># Clusters: </label>
-                <select name="numClusters" id="numClusters"
-                        onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
-                        value={clusterCounts[clusterIndex]}>
-                  {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="dataSet" ># Data Set: </label>
-                <select name="dataSet" id="dataSet"
-                        onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}
-                        value={dataSets[dataSet]}>
-                  {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="pointCount" ># Points: </label>
-                <select name="pointCount" id="pointCount" onChange={(event) => {
-                  //setSelectedIds([]);
-                  setPointCount(+event.target.value);
-                }}
-                value={pointCount}>
-                  {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
-                </select>
-              </div>
-              <br />
-              <label htmlFor="viewDistance">
-                {" "}
-                View Distance: {viewDistance}
-              </label>
-              <input
-                id="voxelResSlider"
-                type="range"
-                min={MIN_VIEW_DISTANCE}
-                max={MAX_VIEW_DISTANCE}
-                value={viewDistance}
-                onChange={(event) => setViewDistance(+event.target.value)}
-                step="1"
-              />
-              <br />
-              <label htmlFor="voxelResSlider">
-                {" "}
-                Voxel Resolution: {voxelResolution}
-              </label>
-              <input
-                id="voxelResSlider"
-                type="range"
-                min={1}
-                max={MAX_VOXEL_RES}
-                value={voxelResolution}
-                onChange={(event) => setVoxelResolution(+event.target.value)}
-                step="1"
-              />
-              <br />
-              <label htmlFor="debugVoxels">
-                Show Voxel Debug:
-              </label>
-              <input
-                id="debugVoxels"
-                type="checkbox"
-                checked={debugVoxels}
-                onChange={(event) => setDebugVoxels(event.target.checked)}
-              />
+              <label htmlFor="numClusters" ># Clusters: </label>
+              <select name="numClusters" id="numClusters"
+                      onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
+                      value={clusterCounts[clusterIndex]}>
+                {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="dataSet" >Data Set: </label>
+              <select name="dataSet" id="dataSet"
+                      onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}
+                      value={dataSets[dataSet]}>
+                {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="pointCount" ># Points: </label>
+              <select name="pointCount" id="pointCount" onChange={(event) => {
+                //setSelectedIds([]);
+                setPointCount(+event.target.value);
+              }}
+                      value={pointCount}>
+                {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
+              </select>
+            </div>
+            <label htmlFor="showClusterHulls">
+              Show Cluster Hulls:
+            </label>
+            <input
+              id="showClusterHulls"
+              type="checkbox"
+              checked={showClusterHulls}
+              onChange={(event) => setShowClusterHulls(event.target.checked)}
+            />
+
+            <br/>
+            <br/>
+            <h4>Performance Options</h4>
+            <label htmlFor="resolutionSlider">
+              {" "}
+              Point Resolution: {pointResolution}
+            </label>
+            <input
+              id="resolutionSlider"
+              type="range"
+              min="1"
+              max={MAX_POINT_RES}
+              value={pointResolution}
+              onChange={(event) => setPointResolution(+event.target.value)}
+              step="1"
+            />
+            <br />
+            <label htmlFor="usePostProcessing">
+              Enable Post FX:
+            </label>
+            <input
+              id="usePostProcessing"
+              type="checkbox"
+              checked={usePostProcessing}
+              onChange={(event) => setUsePostProcessing(event.target.checked)}
+            />
+            <br />
+            <label htmlFor="usePerPointLighting">
+              Per Point Lighting:
+            </label>
+            <input
+              id="usePerPointLighting"
+              type="checkbox"
+              checked={usePerPointLighting}
+              onChange={(event) => setUsePerPointLighting(event.target.checked)}
+            />
+            <br />
+            <label htmlFor="viewDistance">
+              {" "}
+              View Distance: {viewDistance}
+            </label>
+
+            <h4>Advanced / Debug</h4>
+            <input
+              id="voxelResSlider"
+              type="range"
+              min={MIN_VIEW_DISTANCE}
+              max={MAX_VIEW_DISTANCE}
+              value={viewDistance}
+              onChange={(event) => setViewDistance(+event.target.value)}
+              step="1"
+            />
+            <br />
+            <label htmlFor="voxelResSlider">
+              {" "}
+              Voxel Resolution: {voxelResolution}
+            </label>
+            <input
+              id="voxelResSlider"
+              type="range"
+              min={1}
+              max={MAX_VOXEL_RES}
+              value={voxelResolution}
+              onChange={(event) => setVoxelResolution(+event.target.value)}
+              step="1"
+            />
+            <br />
+            <label htmlFor="debugVoxels">
+              Show Voxel Debug:
+            </label>
+            <input
+              id="debugVoxels"
+              type="checkbox"
+              checked={debugVoxels}
+              onChange={(event) => setDebugVoxels(event.target.checked)}
+            />
             {/*glContext && <DebugStats gl={glContext}/> */}
           </>
         )}
