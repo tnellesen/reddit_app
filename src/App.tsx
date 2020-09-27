@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -69,14 +69,14 @@ const getMesh = (group: Group | Object3D): Mesh => {
   return new Mesh(geometry, material);
 };
 
-export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000, 1000000];
+export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000];
 
 export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
   const [clusters, setClusters] = React.useState<Cluster[]>([]);
-  const [clusterIndex, setClusterIndex] = React.useState<number>(0);
-  const [pointCount, setPointCount] = React.useState<number>(25000);
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
+  const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
+  const [pointCount, setPointCount] = React.useState<number>(25000);
   const [selectedPoints, setSelectedPoints] = React.useState<Point[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
@@ -86,6 +86,7 @@ export default function App() {
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
+  const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
@@ -175,8 +176,9 @@ export default function App() {
   },[viewDistance, camera] )
 
   const search = () => {
+    const cleanedSearchTerm = searchTerm.toLowerCase().trim();
     redditData.forEach((point) => {
-      if (point.include && point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
+      if (point.include && point.subreddit.toLowerCase() === cleanedSearchTerm) {
         if(multiSelect) {
           const newSelectedPoints = [...selectedPoints];
           newSelectedPoints.push(point);
@@ -276,6 +278,7 @@ export default function App() {
                     pointResolution={pointResolution}
                     voxelResolution={voxelResolution}
                     debugVoxels={debugVoxels}
+                    usePerPointLighting={usePerPointLighting}
                   />
                 )
             </Canvas>
@@ -341,124 +344,136 @@ export default function App() {
                 onChange={(event) => setMultiSelect(event.target.checked)}
               />
             </form>
+            <br />
+            <label htmlFor="nsfwSlider">
+              {" "}
+              Max % NSFW Threads: {maxPercentNSFW}
+            </label>
+            <input
+              id="nsfwSlider"
+              type="range"
+              min={0}
+              max={100}
+              step={0.1}
+              value={maxPercentNSFW}
+              onChange={(event) => {
+                setMaxPercentNSFW(+event.target.value);
+                selectedPoints.filter(point => point.percentNsfw < +event.target.value)
+                setSelectedPoints(selectedPoints);
+                //}
+              }}
+            />
             <div>
-                <label htmlFor="resolutionSlider">
-                  {" "}
-                  Point Resolution: {pointResolution}
-                </label>
-                <input
-                  id="resolutionSlider"
-                  type="range"
-                  min="1"
-                  max={MAX_POINT_RES}
-                  value={pointResolution}
-                  onChange={(event) => setPointResolution(+event.target.value)}
-                  step="1"
-                />
-                <br />
-                <label htmlFor="nsfwSlider">
-                  {" "}
-                  Max % NSFW Threads: {maxPercentNSFW}
-                </label>
-                <input
-                  id="nsfwSlider"
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={maxPercentNSFW}
-                  onChange={(event) => {
-                    setMaxPercentNSFW(+event.target.value);
-                    selectedPoints.filter(point => point.percentNsfw < +event.target.value)
-                    setSelectedPoints(selectedPoints);
-                    //}
-                  }}
-                />
-                <br />
-                <label htmlFor="usePostProcessing">
-                  Enable Post FX:
-                </label>
-                <input
-                  id="usePostProcessing"
-                  type="checkbox"
-                  checked={usePostProcessing}
-                  onChange={(event) => setUsePostProcessing(event.target.checked)}
-                />
-                <br />
-                <label htmlFor="showClusterHulls">
-                  Show Cluster Hulls:
-                </label>
-                <input
-                  id="showClusterHulls"
-                  type="checkbox"
-                  checked={showClusterHulls}
-                  onChange={(event) => setShowClusterHulls(event.target.checked)}
-                />
-              </div>
-              <div>
-                <label htmlFor="numClusters" ># Clusters: </label>
-                <select name="numClusters" id="numClusters"
-                        onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
-                        value={clusterCounts[clusterIndex]}>
-                  {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="dataSet" ># Data Set: </label>
-                <select name="dataSet" id="dataSet"
-                        onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}
-                        value={dataSets[dataSet]}>
-                  {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="pointCount" ># Points: </label>
-                <select name="pointCount" id="pointCount" onChange={(event) => {
-                  //setSelectedIds([]);
-                  setPointCount(+event.target.value);
-                }}
-                value={pointCount}>
-                  {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
-                </select>
-              </div>
-              <br />
-              <label htmlFor="viewDistance">
-                {" "}
-                View Distance: {viewDistance}
-              </label>
-              <input
-                id="voxelResSlider"
-                type="range"
-                min={MIN_VIEW_DISTANCE}
-                max={MAX_VIEW_DISTANCE}
-                value={viewDistance}
-                onChange={(event) => setViewDistance(+event.target.value)}
-                step="1"
-              />
-              <br />
-              <label htmlFor="voxelResSlider">
-                {" "}
-                Voxel Resolution: {voxelResolution}
-              </label>
-              <input
-                id="voxelResSlider"
-                type="range"
-                min={1}
-                max={MAX_VOXEL_RES}
-                value={voxelResolution}
-                onChange={(event) => setVoxelResolution(+event.target.value)}
-                step="1"
-              />
-              <br />
-              <label htmlFor="debugVoxels">
-                Show Voxel Debug:
-              </label>
-              <input
-                id="debugVoxels"
-                type="checkbox"
-                checked={debugVoxels}
-                onChange={(event) => setDebugVoxels(event.target.checked)}
-              />
+              <label htmlFor="pointCount" ># Points: </label>
+              <select name="pointCount" id="pointCount" onChange={(event) => {
+                //setSelectedIds([]);
+                setPointCount(+event.target.value);
+              }}
+                      value={pointCount}>
+                {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="numClusters" ># Clusters: </label>
+              <select name="numClusters" id="numClusters"
+                      onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
+                      value={clusterCounts[clusterIndex]}>
+                {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="dataSet" >Data Set: </label>
+              <select name="dataSet" id="dataSet"
+                      onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}
+                      value={dataSets[dataSet]}>
+                {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
+              </select>
+            </div>
+            <label htmlFor="showClusterHulls">
+              Show Cluster Hulls:
+            </label>
+            <input
+              id="showClusterHulls"
+              type="checkbox"
+              checked={showClusterHulls}
+              onChange={(event) => setShowClusterHulls(event.target.checked)}
+            />
+
+            <br/>
+            <br/>
+            <h4>Performance Options</h4>
+            <label htmlFor="usePostProcessing">
+              Enable Post FX:
+            </label>
+            <input
+              id="usePostProcessing"
+              type="checkbox"
+              checked={usePostProcessing}
+              onChange={(event) => setUsePostProcessing(event.target.checked)}
+            />
+            <br />
+            <label htmlFor="usePerPointLighting">
+              Per Point Lighting:
+            </label>
+            <input
+              id="usePerPointLighting"
+              type="checkbox"
+              checked={usePerPointLighting}
+              onChange={(event) => setUsePerPointLighting(event.target.checked)}
+            />
+            <br/>
+            <label htmlFor="resolutionSlider">
+              {" "}
+              Point Resolution: {pointResolution}
+            </label>
+            <input
+              id="resolutionSlider"
+              type="range"
+              min="1"
+              max={MAX_POINT_RES}
+              value={pointResolution}
+              onChange={(event) => setPointResolution(+event.target.value)}
+              step="1"
+            />
+            <br />
+            <label htmlFor="viewDistance">
+              {" "}
+              View Distance: {viewDistance}
+            </label>
+            <input
+              id="voxelResSlider"
+              type="range"
+              min={MIN_VIEW_DISTANCE}
+              max={MAX_VIEW_DISTANCE}
+              value={viewDistance}
+              onChange={(event) => setViewDistance(+event.target.value)}
+              step="1"
+            />
+
+            <h4>Advanced / Debug</h4>
+            <label htmlFor="voxelResSlider">
+              {" "}
+              Voxel Resolution: {voxelResolution}
+            </label>
+            <input
+              id="voxelResSlider"
+              type="range"
+              min={1}
+              max={MAX_VOXEL_RES}
+              value={voxelResolution}
+              onChange={(event) => setVoxelResolution(+event.target.value)}
+              step="1"
+            />
+            <br />
+            <label htmlFor="debugVoxels">
+              Show Voxel Debug:
+            </label>
+            <input
+              id="debugVoxels"
+              type="checkbox"
+              checked={debugVoxels}
+              onChange={(event) => setDebugVoxels(event.target.checked)}
+            />
             {/*glContext && <DebugStats gl={glContext}/> */}
           </>
         )}

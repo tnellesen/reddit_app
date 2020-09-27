@@ -22,6 +22,14 @@ const ANIMATION_SPEED = 5;
 
 const origin = new THREE.Vector3(0, 0, 0);
 
+const hasCameraChanged = (prevProps: ControlsProps, nextProps: ControlsProps): boolean => {
+  return prevProps.distance === nextProps.distance
+    && prevProps.position && nextProps.position
+    && prevProps.target && nextProps.target
+    && prevProps.position.equals(nextProps.position)
+    && prevProps.target.equals(nextProps.target) || false
+}
+
 export const Controls = memo((props: ControlsProps) => {
   const { target, position, distance } = props;
 
@@ -129,4 +137,4 @@ export const Controls = memo((props: ControlsProps) => {
       enableDamping
     />
   );
-});
+}, hasCameraChanged);

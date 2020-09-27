@@ -7,7 +7,7 @@ import { Cluster, Point } from "../App";
 import { useWindowSize} from "../ViewportHooks"
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 import {ClusterHulls} from "./ClusterHulls";
-import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
+import {MAX_POINT_RES, MOBILE_THRESHOLD_WIDTH, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
 import {memo, useMemo} from "react";
 import {Color, Vector3} from "three";
 
@@ -25,10 +25,12 @@ interface ThreePointVisProps {
   pointResolution: number;
   voxelResolution: number;
   debugVoxels?: boolean;
+  usePerPointLighting?: boolean;
 }
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
-  const { data, selectedPoints, clusters, onSelect, pointResolution, voxelResolution, debugVoxels } = props;
+  const { data, selectedPoints, clusters, onSelect, pointResolution,
+    voxelResolution, debugVoxels, usePerPointLighting } = props;
 
   const selectedPointVectors = selectedPoints.map(point => new Vector3(point.x, point.y, point.z));
   const selectedBoundingSphere = new THREE.Sphere().setFromPoints(selectedPointVectors);
@@ -50,20 +52,21 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
 
   const renderSelectedPoints = selectedPoints.map(
       function(point) {
-          return(<group
+          return(
+            <group
               key={point.id}
               position={[
                   point.x,
                   point.y,
                   point.z
               ]}
-          >
+            >
               <Text
                   message={point.subreddit}
                   x={0}
                   y={0}
                   z={0}
-                  position={width < 500 ? Position.BOTTOM : Position.RIGHT}
+                  position={width < MOBILE_THRESHOLD_WIDTH ? Position.BOTTOM : Position.RIGHT}
               />
               <mesh renderOrder={2}>
                   <sphereBufferGeometry
@@ -84,6 +87,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
                                        transparent={true}
                                        color={SELECTED_COLOR}/>
               </mesh>
+            {usePerPointLighting &&
               <pointLight
                   distance={10 * SCALE_FACTOR}
                   position={[0, 0, 0]}
@@ -91,6 +95,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
                   decay={1}
                   color={SELECTED_COLOR}
               />
+            }
           </group>)
       }
 
@@ -124,7 +129,18 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
           />}
 
         {selectedPoints.length > 0 && (
-            renderSelectedPoints
+          <>
+            {renderSelectedPoints}
+            {!usePerPointLighting &&
+            <pointLight
+                distance={10 + selectedBoundingSphere.radius}
+                position={selectedBoundingSphere.center}
+                intensity={1.9}
+                decay={1}
+                color={SELECTED_COLOR}
+            />
+            }
+          </>
         )}
       </>)
 });
