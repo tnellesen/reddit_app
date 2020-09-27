@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH, MAX_DATA_LIST_SIZE
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -94,6 +94,9 @@ export default function App() {
   const [viewDistance, setViewDistance] = React.useState(
     Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE));
   const [camera, setCamera] = React.useState<Camera>();
+  const [dataList, setDataList] = React.useState<string[]>([]);
+  const firstUpdate = React.useRef(true);
+
 
 
   const [{ data, loading, error }] = useAxios(
@@ -140,7 +143,7 @@ export default function App() {
   }, [maxPercentNSFW, data, clusterIndex]);
 
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const selectedSubreddits = selectedPoints.map(point => point.subreddit);
     const newSelectedPoints: Point[] = redditData.filter(point => selectedSubreddits.includes(point.subreddit));
 
@@ -163,6 +166,16 @@ export default function App() {
       : [];
     setClusters(newClusters);
   }, [clusterIndex, clusterCounts, data]);
+
+  React.useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+    }
+    else {
+      setDataList(
+        redditData.map(point => point.subreddit))
+    }
+  }, [redditData])
 
   React.useEffect(() => {
     setVoxelResolution(getAutoVoxelResolution(pointCount));
@@ -332,6 +345,11 @@ export default function App() {
                 type="text"
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
+                {redditData.length <= MAX_DATA_LIST_SIZE && dataList.length > 0 &&
+                <datalist id="subreddits">
+                  {dataList.map(name => <option value={name}/>)}
+                </datalist>
+              }
               <button>Search</button>
               <br/>
               <label htmlFor="multiSelect">
