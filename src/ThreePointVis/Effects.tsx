@@ -32,8 +32,8 @@ export function Effects(props: EffectsProps) {
 
   const unrealBloom = {
     resolution: aspect,
-    strength: 0.4,
-    radius: 0.01,
+    strength: 0.3,
+    radius: 0.02,
     threshold: 0.19
   };
 
