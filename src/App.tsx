@@ -364,15 +364,6 @@ export default function App() {
               }}
             />
             <div>
-              <label htmlFor="numClusters" ># Clusters: </label>
-              <select name="numClusters" id="numClusters"
-                      onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
-                      value={clusterCounts[clusterIndex]}>
-                {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
-              </select>
-            </div>
-
-            <div>
               <label htmlFor="pointCount" ># Points: </label>
               <select name="pointCount" id="pointCount" onChange={(event) => {
                 //setSelectedIds([]);
@@ -380,6 +371,14 @@ export default function App() {
               }}
                       value={pointCount}>
                 {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="numClusters" ># Clusters: </label>
+              <select name="numClusters" id="numClusters"
+                      onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
+                      value={clusterCounts[clusterIndex]}>
+                {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
               </select>
             </div>
             <div>
