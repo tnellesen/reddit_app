@@ -176,7 +176,7 @@ export default function App() {
   },[viewDistance, camera] )
 
   const search = () => {
-    const cleanedSearchTerm = searchTerm.toLowerCase().trim();
+    const cleanedSearchTerm = searchTerm.toLowerCase().replace(/\s+/g, '');
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === cleanedSearchTerm) {
         if(multiSelect) {
