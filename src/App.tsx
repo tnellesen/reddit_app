@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH, MAX_DATA_LIST_SIZE
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -330,20 +330,26 @@ export default function App() {
             >
               <input
                 type="text"
+                list="subreddits"
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
+                {redditData.length <= MAX_DATA_LIST_SIZE && <datalist id="subreddits">
+                  {redditData.map(point => <option value={point.subreddit}/>)}
+                </datalist>
+              }
               <button>Search</button>
               <br/>
-              <label htmlFor="multiSelect">
-                Multi Select:
-              </label>
-              <input
-                id="multiSelect"
-                type="checkbox"
-                checked={multiSelect}
-                onChange={(event) => setMultiSelect(event.target.checked)}
-              />
             </form>
+
+            <label htmlFor="multiSelect">
+              Multi Select:
+            </label>
+            <input
+              id="multiSelect"
+              type="checkbox"
+              checked={multiSelect}
+              onChange={(event) => setMultiSelect(event.target.checked)}
+            />
             <br />
             <label htmlFor="nsfwSlider">
               {" "}
