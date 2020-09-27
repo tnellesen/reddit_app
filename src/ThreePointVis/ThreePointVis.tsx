@@ -7,7 +7,7 @@ import { Cluster, Point } from "../App";
 import { useWindowSize} from "../ViewportHooks"
 import {VoxelInstancedPoints} from "./VoxelInstancedPoints";
 import {ClusterHulls} from "./ClusterHulls";
-import {MAX_POINT_RES, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
+import {MAX_POINT_RES, MOBILE_THRESHOLD_WIDTH, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR} from "../constants";
 import {memo, useMemo} from "react";
 import {Color, Vector3} from "three";
 
@@ -66,7 +66,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
                   x={0}
                   y={0}
                   z={0}
-                  position={width < 500 ? Position.BOTTOM : Position.RIGHT}
+                  position={width < MOBILE_THRESHOLD_WIDTH ? Position.BOTTOM : Position.RIGHT}
               />
               <mesh renderOrder={2}>
                   <sphereBufferGeometry
