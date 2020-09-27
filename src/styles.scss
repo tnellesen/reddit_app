@@ -1,5 +1,9 @@
 $mobileBreakpoint: 512px;
 
+html {
+  font-size: 16px;
+}
+
 body {
   margin: 0;
 }
@@ -34,10 +38,11 @@ div {
     top: 5em;
     z-index: 1;
     background: rgba(0, 0, 0, 0.75);
-    padding: 16px;
+    padding: 1em;
     color: #fff;
     width: 250px;
-    border-radius: 16px;
+    border-radius: 1em;
+    touch-action: none; // Disable pinch to zoom on iOS devices
 
     .controls-title-bar {
       background: rgba(0, 0, 0, 0.9);
@@ -51,10 +56,14 @@ div {
       }
     }
 
-    .error-message {
-      color: white;
-      font-size: 10em;
+    input, button, select {
+      font-size: 1em;
     }
+  }
+
+  .error-message {
+    color: white;
+    font-size: 10em;
   }
 
   @media only screen and (max-width: $mobileBreakpoint) {
