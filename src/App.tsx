@@ -325,13 +325,21 @@ export default function App() {
                 </>)
             }
             <br />
-            <DataList
-              values={dataList}
-              onSelect={(value) => {setSearchTerm(value); search(value);}}
-              onChange={(value) => setSearchTerm(value)}/>
-            <button onClick={() => search(searchTerm)}>
-              Search
-            </button>
+            <form
+              onSubmit={(event) => {
+                search(searchTerm);
+                event.preventDefault();
+              }}
+            >
+              <DataList
+                values={dataList}
+                onSelect={(value) => {setSearchTerm(value); search(value);}}
+                onChange={(value) => setSearchTerm(value)}/>
+              <button>
+                Search
+              </button>
+            </form>
+
             <label htmlFor="multiSelect">
               Multi Select:
             </label>

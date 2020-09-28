@@ -104,7 +104,7 @@ export const DataList = memo((props: DataListProps) => {
         items={data}
         getItemValue={(item) => item}
         value={searchTerm}
-        onChange={(event) => {onChange(event.target.value); setSearchTerm(event.target.value);}}
+        onChange={(event) => {onChange(cleanTerm(event.target.value)); setSearchTerm(event.target.value);}}
         onSelect={(value) => { setSearchTerm(value); onSelect(cleanTerm(value));}}
         renderMenu={Menu}
       />
