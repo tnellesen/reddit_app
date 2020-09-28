@@ -344,7 +344,7 @@ export default function App() {
               </datalist>*/}
               {<DataList
                 values={dataList}
-                onSelect={(value) => {setSearchTerm(value); search(value);}}
+                onSelect={(value) => {search(value);}}
                 onChange={(value) => setSearchTerm(value)}/> }
               {/*<DataList2
                 values={dataList}

@@ -10,7 +10,7 @@ export interface DataListProps {
   onSelect: (
     selected: string
   ) => void;
-  onChange: (
+  onChange?: (
     selected: string
   ) => void;
 }
@@ -117,8 +117,8 @@ export const DataList = memo((props: DataListProps) => {
         items={data}
         getItemValue={(item) => item}
         value={searchTerm}
-        onChange={(event) => {onChange(cleanTerm(event.target.value)); setSearchTerm(event.target.value);}}
-        onSelect={(value) => { setSearchTerm(value); onSelect(cleanTerm(value));}}
+        onChange={(event) => {onChange !== undefined && onChange(cleanTerm(event.target.value)); setSearchTerm(event.target.value);}}
+        onSelect={(value) => { onSelect(cleanTerm(value));}}
         renderMenu={menuRenderer}
       />
   );
