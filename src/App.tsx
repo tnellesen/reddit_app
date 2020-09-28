@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH, MAX_DATA_LIST_SIZE
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -338,6 +338,7 @@ export default function App() {
               <button>
                 Search
               </button>
+
             </form>
 
             <label htmlFor="multiSelect">
