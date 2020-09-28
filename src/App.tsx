@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH, MAX_DATA_LIST_SIZE
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -28,6 +28,7 @@ import {Effects} from "./ThreePointVis/Effects";
 import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
 import {useMemo} from "react";
+import {DataList} from "./DataList";
 
 export interface Point {
   id: number;
@@ -94,6 +95,8 @@ export default function App() {
   const [viewDistance, setViewDistance] = React.useState(
     Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE));
   const [camera, setCamera] = React.useState<Camera>();
+  const [dataList, setDataList] = React.useState<string[]>([]);
+
 
 
   const [{ data, loading, error }] = useAxios(
@@ -132,6 +135,7 @@ export default function App() {
 
     if(newRedditData && newRedditData.length) {
       setRedditData(newRedditData);
+      setDataList(newRedditData.filter(point => point.include).map(point => point.subreddit));
     }
     if(newClusters && newClusters.length) {
       setClusters(newClusters);
@@ -175,10 +179,9 @@ export default function App() {
     }
   },[viewDistance, camera] )
 
-  const search = () => {
-    const cleanedSearchTerm = searchTerm.toLowerCase().replace(/\s+/g, '');
+  const search = (term: string) => {
     redditData.forEach((point) => {
-      if (point.include && point.subreddit.toLowerCase() === cleanedSearchTerm) {
+      if (point.include && point.subreddit.toLowerCase() === term) {
         if(multiSelect) {
           const newSelectedPoints = [...selectedPoints];
           newSelectedPoints.push(point);
@@ -324,23 +327,17 @@ export default function App() {
             <br />
             <form
               onSubmit={(event) => {
-                search();
+                search(searchTerm);
                 event.preventDefault();
               }}
             >
-              <input
-                type="text"
-                list="subreddits"
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-                {redditData.length <= MAX_DATA_LIST_SIZE && <datalist id="subreddits">
-                  {redditData.map(point => <option value={point.subreddit}/>)}
-                </datalist>
-              }
+              <DataList
+                values={dataList}
+                onSelect={(value) => {setSearchTerm(value); search(value);}}
+                onChange={(value) => setSearchTerm(value)}/>
               <button>Search</button>
               <br/>
             </form>
-
             <label htmlFor="multiSelect">
               Multi Select:
             </label>
@@ -351,6 +348,7 @@ export default function App() {
               onChange={(event) => setMultiSelect(event.target.checked)}
             />
             <br />
+            <br/>
             <label htmlFor="nsfwSlider">
               {" "}
               Max % NSFW Threads: {maxPercentNSFW}

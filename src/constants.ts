@@ -11,15 +11,13 @@ export const MAX_VOXEL_RES = 12;
 export const MIN_VIEW_DISTANCE = 100;
 export const MAX_VIEW_DISTANCE = 20000;
 
-export const MAX_DATA_LIST_SIZE = 25000;
-
 export const SELECTED_COLOR = "#5E5";
 
 export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
-  Latest: "new_2.0",
-  Legacy: "original"
+  Original: "original",
+  New25: "new_0.25"
 }
 
 // Threshold for auto disabling expensive graphical effects
