@@ -16,8 +16,8 @@ export const SELECTED_COLOR = "#5E5";
 export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
-  Original: "original",
-  New25: "new_0.25"
+  Latest: "new_2.0",
+  Legacy: "original"
 }
 
 // Threshold for auto disabling expensive graphical effects
