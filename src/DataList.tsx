@@ -14,8 +14,19 @@ export interface DataListProps {
   ) => void;
 }
 
-const Item = (item:string) => {
-  return <div>{item}</div>;
+const Item = (item:string, highlighted: boolean) => {
+  return <div key={item}
+              style={{
+                background: highlighted ? "#0b195e" : "#111111",
+                height: "auto",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                borderBottom: "1px solid grey",
+                padding: "5px",
+                boxSizing: "border-box"
+              }}>
+            {item}
+        </div>;
 };
 
 const cleanTerm = (term: string) =>
@@ -24,7 +35,7 @@ const cleanTerm = (term: string) =>
 
 const createMenuRenderer = (cellHeightCache: CellMeasurerCache) => {
   return (items: ReactNode[], value: string, autocompleteStyle: CSSProperties) => {
-    const rowRenderer: ListRowRenderer = ({ key, index, parent, style }) => {
+    const rowRenderer: ListRowRenderer = ({ key, index, parent }) => {
       const Item = items[index] as React.ReactElement;
       const onMouseDown = (e: MouseEvent) => {
         if (e.button === 0 && Item) {
@@ -40,18 +51,7 @@ const createMenuRenderer = (cellHeightCache: CellMeasurerCache) => {
           rowIndex={index}
         >
           {React.cloneElement(Item, {
-            style: {
-              ...style,
-              height: "auto",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              borderBottom: "1px solid grey",
-              background: "#222222",
-              padding: "5px",
-              boxSizing: "border-box"
-            },
-            key: key,
-            onMouseEnter: null,
+            //onMouseEnter: null,
             onMouseDown: onMouseDown
           })}
         </CellMeasurer>
@@ -67,7 +67,6 @@ const createMenuRenderer = (cellHeightCache: CellMeasurerCache) => {
         width={autocompleteStyle.minWidth as number || 0}
         style={{
           position: "absolute",
-          backgroundColor: "white",
           border: "1px solid black",
           height: "auto",
           maxHeight: "207px",

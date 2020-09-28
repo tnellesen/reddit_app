@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH, MAX_DATA_LIST_SIZE
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -335,12 +335,9 @@ export default function App() {
                 values={dataList}
                 onSelect={(value) => {setSearchTerm(value); search(value);}}
                 onChange={(value) => setSearchTerm(value)}/>
-              <button>
-                Search
-              </button>
-
+              <button>Search</button>
+              <br/>
             </form>
-
             <label htmlFor="multiSelect">
               Multi Select:
             </label>
@@ -350,8 +347,8 @@ export default function App() {
               checked={multiSelect}
               onChange={(event) => setMultiSelect(event.target.checked)}
             />
-            <br/>
             <br />
+            <br/>
             <label htmlFor="nsfwSlider">
               {" "}
               Max % NSFW Threads: {maxPercentNSFW}
