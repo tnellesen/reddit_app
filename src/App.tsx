@@ -28,6 +28,7 @@ import {Effects} from "./ThreePointVis/Effects";
 import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
 import {useMemo} from "react";
+import {DataList} from "./ThreePointVis/DataList";
 
 export interface Point {
   id: number;
@@ -344,11 +345,10 @@ export default function App() {
               <input
                 type="text"
                 onChange={(event) => setSearchTerm(event.target.value)}
+                list="subreddits"
               />
                 {redditData.length <= MAX_DATA_LIST_SIZE && dataList.length > 0 &&
-                <datalist id="subreddits">
-                  {dataList.map(name => <option value={name}/>)}
-                </datalist>
+                <DataList values={dataList} id="subreddits" />
               }
               <button>Search</button>
               <br/>

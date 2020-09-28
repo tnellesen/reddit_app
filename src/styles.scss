@@ -43,6 +43,7 @@ div {
     width: 250px;
     border-radius: 1em;
     touch-action: none; // Disable pinch to zoom on iOS devices
+    overflow: auto;
 
     .controls-title-bar {
       background: rgba(0, 0, 0, 0.9);
@@ -71,6 +72,8 @@ div {
       position: fixed;
       margin-left: 10vw;
       width: 80vw;
+      max-height: 80vh;
+      top: 5vh
     }
   }
 }
