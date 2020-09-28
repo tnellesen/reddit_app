@@ -20,7 +20,7 @@ import {
   POINT_RADIUS,
   MAX_VOXEL_RES,
   MIN_VIEW_DISTANCE,
-  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH, MAX_DATA_LIST_SIZE
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
 } from "./constants";
 import {Stats} from "./ThreePointVis/Stats";
 import {Camera, Canvas} from "react-three-fiber";
@@ -28,7 +28,7 @@ import {Effects} from "./ThreePointVis/Effects";
 import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
 import {useMemo} from "react";
-import {DataList} from "./ThreePointVis/DataList";
+import {DataList} from "./DataList";
 
 export interface Point {
   id: number;
@@ -190,9 +190,8 @@ export default function App() {
   },[viewDistance, camera] )
 
   const search = () => {
-    const cleanedSearchTerm = searchTerm.toLowerCase().replace(/\s+/g, '');
     redditData.forEach((point) => {
-      if (point.include && point.subreddit.toLowerCase() === cleanedSearchTerm) {
+      if (point.include && point.subreddit.toLowerCase() === searchTerm) {
         if(multiSelect) {
           const newSelectedPoints = [...selectedPoints];
           newSelectedPoints.push(point);
@@ -336,32 +335,23 @@ export default function App() {
                 </>)
             }
             <br />
-            <form
-              onSubmit={(event) => {
-                search();
-                event.preventDefault();
-              }}
-            >
-              <input
-                type="text"
-                onChange={(event) => setSearchTerm(event.target.value)}
-                list="subreddits"
-              />
-                {redditData.length <= MAX_DATA_LIST_SIZE && dataList.length > 0 &&
-                <DataList values={dataList} id="subreddits" />
-              }
-              <button>Search</button>
-              <br/>
-              <label htmlFor="multiSelect">
-                Multi Select:
-              </label>
-              <input
-                id="multiSelect"
-                type="checkbox"
-                checked={multiSelect}
-                onChange={(event) => setMultiSelect(event.target.checked)}
-              />
-            </form>
+            <DataList
+              values={dataList}
+              onSelect={(value) => setSearchTerm(value)}
+              onChange={(value) => setSearchTerm(value)}/>
+            <button onClick={search}>
+              Search
+            </button>
+            <label htmlFor="multiSelect">
+              Multi Select:
+            </label>
+            <input
+              id="multiSelect"
+              type="checkbox"
+              checked={multiSelect}
+              onChange={(event) => setMultiSelect(event.target.checked)}
+            />
+            <br/>
             <br />
             <label htmlFor="nsfwSlider">
               {" "}
