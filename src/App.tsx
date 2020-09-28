@@ -180,17 +180,33 @@ export default function App() {
     }
   },[viewDistance, camera] )
 
+  const selectOrDeselectPoint = (index: number, isMultiSelect: boolean) => {
+    const selectedIds = selectedPoints.map(point => point.id);
+    if(isMultiSelect) {
+      if (!selectedIds.includes(index)) {
+        const newSelectedPoints = [...selectedPoints];
+        newSelectedPoints.push(redditData[index]);
+        setSelectedPoints(newSelectedPoints);
+      }
+      else {
+        const newSelectedPoints = [...selectedPoints];
+        setSelectedPoints(newSelectedPoints.filter(point => point.id !== index));
+      }
+    }
+    else {
+      if (selectedIds.length !== 1 || selectedIds[0] !== index) {
+        setSelectedPoints([redditData[index]]);
+      }
+      else {
+        setSelectedPoints([]);
+      }
+    }
+  }
+
   const search = (term: string) => {
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === cleanTerm(term)) {
-        if(multiSelect) {
-          const newSelectedPoints = [...selectedPoints];
-          newSelectedPoints.push(point);
-          setSelectedPoints(newSelectedPoints);
-        }
-        else {
-          setSelectedPoints([point]);
-        }
+        selectOrDeselectPoint(point.id, multiSelect);
       }
     });
   };
@@ -236,27 +252,8 @@ export default function App() {
 
       if (intersects.length > 0) {
         const intersected = intersects[0].object as CollisionSphere;
-        const selectedIds = selectedPoints.map(point => point.id);
         const clickedId = intersected.index;
-        if(multiSelect || event.ctrlKey) {
-          if (!selectedIds.includes(clickedId)) {
-            const newSelectedPoints = [...selectedPoints];
-            newSelectedPoints.push(redditData[clickedId]);
-            setSelectedPoints(newSelectedPoints);
-          }
-          else {
-            const newSelectedPoints = [...selectedPoints];
-            setSelectedPoints(newSelectedPoints.filter(point => point.id !== clickedId));
-          }
-        }
-        else {
-          if (selectedIds.length !== 1 || selectedIds[0] !== clickedId) {
-            setSelectedPoints([redditData[clickedId]]);
-          }
-          else {
-            setSelectedPoints([]);
-          }
-        }
+        selectOrDeselectPoint(clickedId, multiSelect || event.ctrlKey);
       }
     }
   }
