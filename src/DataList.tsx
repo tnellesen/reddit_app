@@ -2,7 +2,8 @@
 import * as React from "react";
 import {CSSProperties, memo, ReactNode} from "react";
 import Autocomplete from "react-autocomplete";
-import {List, CellMeasurer, CellMeasurerCache, ListRowRenderer} from "react-virtualized";
+import {List, ListRowRenderer} from "react-virtualized";
+import {findDOMNode} from "react-dom";
 
 export interface DataListProps {
   values: string[];
@@ -14,68 +15,86 @@ export interface DataListProps {
   ) => void;
 }
 
+const itemHeight = 30;
+
 const Item = (item:string, highlighted: boolean) => {
-  return <div key={item}
-              style={{
+  return <div   style={{
+                //height: itemHeight,
+                boxSizing: "border-box",
                 background: highlighted ? "#0b195e" : "#111111",
-                height: "auto",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                borderBottom: "1px solid grey",
-                padding: "5px",
-                boxSizing: "border-box"
               }}>
             {item}
         </div>;
 };
 
-const cleanTerm = (term: string) =>
+export const cleanTerm = (term: string) =>
   term.toLowerCase().replace(/\s+/g, '')
 
 
-const createMenuRenderer = (cellHeightCache: CellMeasurerCache) => {
-  return (items: ReactNode[], value: string, autocompleteStyle: CSSProperties) => {
-    const rowRenderer: ListRowRenderer = ({ key, index, parent }) => {
+  const menuRenderer =  (items: ReactNode[], value: string, autocompleteStyle: CSSProperties) => {
+    const rowRenderer: ListRowRenderer = ({ key, index, style }) => {
       const Item = items[index] as React.ReactElement;
-      const onMouseDown = (e: MouseEvent) => {
-        if (e.button === 0 && Item) {
+      const onMouseClick = (e: MouseEvent) => {
+        if (Item) {
+          e.preventDefault();
+          e.stopPropagation();
           Item.props.onClick(e);
         }
       };
 
+      const onMouseDown = (e: MouseEvent) => {
+          e.preventDefault();
+      };
+
       return value && (
-        <CellMeasurer
-          cache={cellHeightCache}
-          key={key}
-          parent={parent}
-          rowIndex={index}
-        >
-          {React.cloneElement(Item, {
-            //onMouseEnter: null,
-            onMouseDown: onMouseDown
-          })}
-        </CellMeasurer>
+          React.cloneElement(Item, {
+            key: key,
+            style: {
+              ...Item.props.style,
+              ...style
+            },
+            className: "virtual-list-item",
+            onMouseEnter: null,
+            onMouseDown: onMouseDown,
+            onClick: onMouseClick
+          })
       );
     };
 
     return (
       <List
-        rowHeight={cellHeightCache.rowHeight}
+        rowHeight={itemHeight}
         height={207}
+        //ref={}
         rowCount={items.length}
         rowRenderer={rowRenderer}
         width={autocompleteStyle.minWidth as number || 0}
         style={{
-          position: "absolute",
-          border: "1px solid black",
-          height: "auto",
+          display: items.length ? "block" : "none",
           maxHeight: "207px",
           overflowY: "scroll",
-          display: items.length ? "block" : "none"
         }}
       />
     );
   };
+
+
+// Disable Auto Scrolling as it breaks with virtualized lists
+class LimitedAutocomplete extends Autocomplete {
+  constructor(props: Autocomplete.Props) {
+    super(props);
+    // @ts-ignore
+    this.maybeScrollItemIntoView = () => {
+      // @ts-ignore
+      if (this.isOpen() && this.state.highlightedIndex !== null) {
+        const itemNode = findDOMNode(this.refs['item-' + this.state.highlightedIndex]) as Element;
+        if (itemNode) {
+          itemNode.scrollIntoView(false);
+        }
+      }
+      ;
+    }
+  }
 }
 
 export const DataList = memo((props: DataListProps) => {
@@ -83,29 +102,24 @@ export const DataList = memo((props: DataListProps) => {
 
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  const cellHeightCache = new CellMeasurerCache({
-    defaultHeight: 42,
-    fixedWidth: true
-  });
+  const cleanedSearchTerm = cleanTerm(searchTerm);
+   const data =  searchTerm
+     ? values.filter((value) =>
+       value.toLowerCase().includes(cleanedSearchTerm)
+     )
+     : [] ;
 
-  const cleanedSearchTerm = searchTerm.toLowerCase().replace(/\s+/g, '');
-  const data = searchTerm
-    ? values.filter((value) =>
-      value.toLowerCase().includes(cleanedSearchTerm)
-    )
-    : [];
-
-  const Menu = createMenuRenderer(cellHeightCache);
+  //const Menu = createMenuRenderer();
 
   return (
-      <Autocomplete
+      <LimitedAutocomplete
         renderItem={Item}
         items={data}
         getItemValue={(item) => item}
         value={searchTerm}
         onChange={(event) => {onChange(cleanTerm(event.target.value)); setSearchTerm(event.target.value);}}
         onSelect={(value) => { setSearchTerm(value); onSelect(cleanTerm(value));}}
-        renderMenu={Menu}
+        renderMenu={menuRenderer}
       />
   );
 })

@@ -28,7 +28,8 @@ import {Effects} from "./ThreePointVis/Effects";
 import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
 import {useMemo} from "react";
-import {DataList} from "./DataList";
+//import {DataList2} from "./DataList2";
+import {cleanTerm, DataList} from "./DataList";
 
 export interface Point {
   id: number;
@@ -181,7 +182,7 @@ export default function App() {
 
   const search = (term: string) => {
     redditData.forEach((point) => {
-      if (point.include && point.subreddit.toLowerCase() === term) {
+      if (point.include && point.subreddit.toLowerCase() === cleanTerm(term)) {
         if(multiSelect) {
           const newSelectedPoints = [...selectedPoints];
           newSelectedPoints.push(point);
@@ -331,10 +332,24 @@ export default function App() {
                 event.preventDefault();
               }}
             >
-              <DataList
+              <input
+                type="text"
+                list="subreddits"
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+              {/*<datalist id="subreddits">
+                {dataList.filter((value =>
+                    value.toLowerCase().includes(cleanTerm(searchTerm))
+                )).slice(0, 100).map(subreddit => <option key={subreddit} value={subreddit}/>)}
+              </datalist>*/}
+              {<DataList
                 values={dataList}
                 onSelect={(value) => {setSearchTerm(value); search(value);}}
-                onChange={(value) => setSearchTerm(value)}/>
+                onChange={(value) => setSearchTerm(value)}/> }
+              {/*<DataList2
+                values={dataList}
+                id={"subreddits"}/> */}
+
               <button>Search</button>
               <br/>
             </form>
