@@ -11,8 +11,6 @@ export const MAX_VOXEL_RES = 12;
 export const MIN_VIEW_DISTANCE = 100;
 export const MAX_VIEW_DISTANCE = 20000;
 
-export const MAX_DATA_LIST_SIZE = 5000000;
-
 export const SELECTED_COLOR = "#5E5";
 
 export type dataSetList = {[name: string]: string};

@@ -335,11 +335,9 @@ export default function App() {
                 values={dataList}
                 onSelect={(value) => {setSearchTerm(value); search(value);}}
                 onChange={(value) => setSearchTerm(value)}/>
-              <button>
-                Search
-              </button>
+              <button>Search</button>
+              <br/>
             </form>
-
             <label htmlFor="multiSelect">
               Multi Select:
             </label>
@@ -349,7 +347,7 @@ export default function App() {
               checked={multiSelect}
               onChange={(event) => setMultiSelect(event.target.checked)}
             />
-            <br/>
+            <br />
             <br />
             <label htmlFor="nsfwSlider">
               {" "}
