@@ -348,7 +348,7 @@ export default function App() {
               onChange={(event) => setMultiSelect(event.target.checked)}
             />
             <br />
-            <br />
+            <br/>
             <label htmlFor="nsfwSlider">
               {" "}
               Max % NSFW Threads: {maxPercentNSFW}
