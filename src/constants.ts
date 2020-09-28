@@ -19,7 +19,8 @@ export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
   Original: "original",
-  New25: "new_0.25"
+  New_0_25: "new_0.25",
+  New_2_0: "new_2.0"
 }
 
 // Threshold for auto disabling expensive graphical effects
