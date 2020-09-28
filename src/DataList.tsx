@@ -7,10 +7,10 @@ import {List, CellMeasurer, CellMeasurerCache, ListRowRenderer} from "react-virt
 export interface DataListProps {
   values: string[];
   onSelect: (
-    selected: string | ((prevVar: string) => string)
+    selected: string
   ) => void;
   onChange: (
-    selected: string | ((prevVar: string) => string)
+    selected: string
   ) => void;
 }
 
@@ -18,10 +18,20 @@ const Item = (item:string) => {
   return <div>{item}</div>;
 };
 
+const cleanTerm = (term: string) =>
+  term.toLowerCase().replace(/\s+/g, '')
+
+
 const createMenuRenderer = (cellHeightCache: CellMeasurerCache) => {
   return (items: ReactNode[], value: string, autocompleteStyle: CSSProperties) => {
     const rowRenderer: ListRowRenderer = ({ key, index, parent, style }) => {
-      const Item = items[index];
+      const Item = items[index] as React.ReactElement;
+      const onMouseDown = (e: MouseEvent) => {
+        if (e.button === 0 && Item) {
+          Item.props.onClick(e);
+        }
+      };
+
       return value && (
         <CellMeasurer
           cache={cellHeightCache}
@@ -29,7 +39,7 @@ const createMenuRenderer = (cellHeightCache: CellMeasurerCache) => {
           parent={parent}
           rowIndex={index}
         >
-          {React.cloneElement(Item as React.ReactElement, {
+          {React.cloneElement(Item, {
             style: {
               ...style,
               height: "auto",
@@ -42,6 +52,7 @@ const createMenuRenderer = (cellHeightCache: CellMeasurerCache) => {
             },
             key: key,
             onMouseEnter: null,
+            onMouseDown: onMouseDown
           })}
         </CellMeasurer>
       );
@@ -78,7 +89,7 @@ export const DataList = memo((props: DataListProps) => {
     fixedWidth: true
   });
 
-  const cleanedSearchTerm = searchTerm.toLowerCase().replace(/\s+/g, '');;
+  const cleanedSearchTerm = searchTerm.toLowerCase().replace(/\s+/g, '');
   const data = searchTerm
     ? values.filter((value) =>
       value.toLowerCase().includes(cleanedSearchTerm)
@@ -93,8 +104,8 @@ export const DataList = memo((props: DataListProps) => {
         items={data}
         getItemValue={(item) => item}
         value={searchTerm}
-        onChange={(_, value) => {onChange(value); setSearchTerm(value);}}
-        onSelect={onSelect}
+        onChange={(event) => {onChange(event.target.value); setSearchTerm(event.target.value);}}
+        onSelect={(value) => { setSearchTerm(value); onSelect(cleanTerm(value));}}
         renderMenu={Menu}
       />
   );

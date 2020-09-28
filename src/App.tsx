@@ -96,7 +96,6 @@ export default function App() {
     Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE));
   const [camera, setCamera] = React.useState<Camera>();
   const [dataList, setDataList] = React.useState<string[]>([]);
-  const firstUpdate = React.useRef(true);
 
 
 
@@ -136,6 +135,7 @@ export default function App() {
 
     if(newRedditData && newRedditData.length) {
       setRedditData(newRedditData);
+      setDataList(newRedditData.filter(point => point.include).map(point => point.subreddit));
     }
     if(newClusters && newClusters.length) {
       setClusters(newClusters);
@@ -144,7 +144,7 @@ export default function App() {
   }, [maxPercentNSFW, data, clusterIndex]);
 
 
-  React.useLayoutEffect(() => {
+  React.useEffect(() => {
     const selectedSubreddits = selectedPoints.map(point => point.subreddit);
     const newSelectedPoints: Point[] = redditData.filter(point => selectedSubreddits.includes(point.subreddit));
 
@@ -169,16 +169,6 @@ export default function App() {
   }, [clusterIndex, clusterCounts, data]);
 
   React.useEffect(() => {
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
-    }
-    else {
-      setDataList(
-        redditData.map(point => point.subreddit))
-    }
-  }, [redditData])
-
-  React.useEffect(() => {
     setVoxelResolution(getAutoVoxelResolution(pointCount));
   },[pointCount] )
 
@@ -189,9 +179,9 @@ export default function App() {
     }
   },[viewDistance, camera] )
 
-  const search = () => {
+  const search = (term: string) => {
     redditData.forEach((point) => {
-      if (point.include && point.subreddit.toLowerCase() === searchTerm) {
+      if (point.include && point.subreddit.toLowerCase() === term) {
         if(multiSelect) {
           const newSelectedPoints = [...selectedPoints];
           newSelectedPoints.push(point);
@@ -337,9 +327,9 @@ export default function App() {
             <br />
             <DataList
               values={dataList}
-              onSelect={(value) => setSearchTerm(value)}
+              onSelect={(value) => {setSearchTerm(value); search(value);}}
               onChange={(value) => setSearchTerm(value)}/>
-            <button onClick={search}>
+            <button onClick={() => search(searchTerm)}>
               Search
             </button>
             <label htmlFor="multiSelect">
