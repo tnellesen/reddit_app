@@ -1,0 +1,12 @@
+.data-list-input {
+  position: relative;
+  &:after {
+    content: "\25BC";
+    color: black;
+    position: absolute;
+    right: 5%;
+    top: 2%;
+  }
+}
+
+
