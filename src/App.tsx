@@ -329,7 +329,7 @@ export default function App() {
                 event.preventDefault();
               }}
             >
-              <input
+              {/* <input
                 type="text"
                 list="subreddits"
                 onChange={(event) => setSearchTerm(event.target.value)}
