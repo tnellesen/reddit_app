@@ -28,9 +28,7 @@ import {Effects} from "./ThreePointVis/Effects";
 import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
 import {useMemo} from "react";
-//import {DataList2} from "./DataList2";
-import {cleanTerm} from "./DataList";
-import {DataList2} from "./DataList2";
+import {cleanTerm, DataList} from "./DataList";
 
 export interface Point {
   id: number;
@@ -324,38 +322,14 @@ export default function App() {
                 </>)
             }
             <br />
-            <form
-              onSubmit={(event) => {
-                search(searchTerm);
-                event.preventDefault();
-              }}
-            >
-
-              <DataList2
+              <DataList
                 values={dataList.filter((value =>
                   value.toLowerCase().includes(cleanTerm(searchTerm))))}
                 id={"subreddits"}
-                onSelect={(value) => {search(value);}}
+                onSelect={(value) => search(value)}
                 onChange={(value) => setSearchTerm(value)}/>
-              {/*<input
-                type="text"
-                list="subreddits"
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-              <datalist id="subreddits">
-                {dataList.filter((value =>
-                    value.toLowerCase().includes(cleanTerm(searchTerm))
-                )).slice(0, 100).map(subreddit => <option key={subreddit} value={subreddit}/>)}
-              </datalist>
-             {/* {<DataList
-                values={dataList}
-                onSelect={(value) => {search(value);}}
-                onChange={(value) => setSearchTerm(value)}/> }
-               */}
-
-              <button>Search</button>
+              <button onClick={() => search(searchTerm)}>Search</button>
               <br/>
-            </form>
             <label htmlFor="multiSelect">
               Multi Select:
             </label>

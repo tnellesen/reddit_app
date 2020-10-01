@@ -1,13 +1,13 @@
 //Based on: https://medium.com/@leofabrikant/react-autocomplete-with-react-virtualized-to-handle-massive-search-results-7865a8786972
 import * as React from "react";
-import {CSSProperties, memo, ReactNode} from "react";
-import Autocomplete from "react-autocomplete";
-import {List, ListRowRenderer} from "react-virtualized";
-import {findDOMNode} from "react-dom";
+import {areEqual, FixedSizeList as List} from "react-window";
+import "./DataList.scss";
+import {memo, useRef} from "react";
 
 export interface DataListProps {
   values: string[];
-  onSelect: (
+  id: string;
+  onSelect?: (
     selected: string
   ) => void;
   onChange?: (
@@ -15,112 +15,144 @@ export interface DataListProps {
   ) => void;
 }
 
-const itemHeight = 30;
-
-const Item = (item:string, highlighted: boolean) => {
-  return <div   style={{
-                //height: itemHeight,
-                boxSizing: "border-box",
-                background: highlighted ? "#0b195e" : "#111111",
-              }}>
-            {item}
-        </div>;
-};
-
 export const cleanTerm = (term: string) =>
   term.toLowerCase().replace(/\s+/g, '')
 
-
-  const menuRenderer =  (items: ReactNode[], value: string, autocompleteStyle: CSSProperties) => {
-    const rowRenderer: ListRowRenderer = ({ key, index, style }) => {
-      const Item = items[index] as React.ReactElement;
-      const onMouseClick = (e: MouseEvent) => {
-        if (Item) {
-          e.preventDefault();
-          e.stopPropagation();
-          Item.props.onClick(e);
-        }
-      };
-
-      const onMouseDown = (e: MouseEvent) => {
-          e.preventDefault();
-      };
-
-      return value && (
-          React.cloneElement(Item, {
-            key: key,
-            style: {
-              ...Item.props.style,
-              ...style
-            },
-            className: "virtual-list-item",
-            onMouseEnter: null,
-            onMouseDown: onMouseDown,
-            onClick: onMouseClick
-          })
-      );
-    };
-
-    return (
-      <List
-        rowHeight={itemHeight}
-        height={207}
-        //ref={}
-        rowCount={items.length}
-        rowRenderer={rowRenderer}
-        width={autocompleteStyle.minWidth as number || 0}
-        style={{
-          display: items.length ? "block" : "none",
-          maxHeight: "207px",
-          overflowY: "scroll",
-        }}
-      />
-    );
-  };
-
-
-// Disable Auto Scrolling as it breaks with virtualized lists
-class LimitedAutocomplete extends Autocomplete {
-  constructor(props: Autocomplete.Props) {
-    super(props);
-    // @ts-ignore
-    this.maybeScrollItemIntoView = () => {
-      // @ts-ignore
-      if (this.isOpen() && this.state.highlightedIndex !== null) {
-        const itemNode = findDOMNode(this.refs['item-' + this.state.highlightedIndex]) as Element;
-        if (itemNode) {
-          itemNode.scrollIntoView(false);
-        }
-      }
-      ;
-    }
-  }
-}
+const itemHeight = 30;
 
 export const DataList = memo((props: DataListProps) => {
-  const {values, onSelect, onChange} = props;
+  const {values, id, onChange, onSelect} = props;
 
+  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
+  const [lastHoverIndex, setLastHoverIndex] = React.useState(0);
+  const [showMenu, setShowMenu] = React.useState(false);
+  const [mouseSelect, setMouseSelect] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  const cleanedSearchTerm = cleanTerm(searchTerm);
-   const data =  searchTerm
-     ? values.filter((value) =>
-       value.toLowerCase().includes(cleanedSearchTerm)
-     )
-     : [] ;
+  const listRef = useRef<List>(null);
+  const containerRef = useRef<HTMLElement | null>(null);
 
-  //const Menu = createMenuRenderer();
+  React.useEffect(() => {
+    if (containerRef.current) {
+      containerRef?.current?.setAttribute('tabIndex', '0');
+    }
+  }, [containerRef]);
+
+  // @ts-ignore
+  const Row = memo(({ data, index, style }) => {
+    // Data passed to List as "itemData" is available as props.data
+    const item = data[index];
+
+    return (
+      <div className="data-list-item"
+        onMouseOver={() => {
+        if(lastHoverIndex !== index && mouseSelect) {
+          setActiveIndex(index);
+          setLastHoverIndex(index);
+        }
+      }}
+           onMouseMove={() => setMouseSelect(true)}
+           style={{
+             ...style,
+             backgroundColor: index === activeIndex ?  "#0b195e" : "#111111",
+             verticalAlign: "center"
+           }}
+            onClick={() => {
+              setShowMenu(false) ;
+              setActiveIndex(null);
+              onSelect && onSelect(values[index]);}}>
+        {item}
+      </div>
+    );
+  }, areEqual)
+
+  React.useEffect(() => {
+    if(activeIndex !== null) {
+      listRef.current?.scrollToItem(activeIndex);
+    }
+  });
 
   return (
-      <LimitedAutocomplete
-        renderItem={Item}
-        items={data}
-        getItemValue={(item) => item}
-        value={searchTerm}
-        onChange={(event) => {onChange !== undefined && onChange(cleanTerm(event.target.value)); setSearchTerm(event.target.value);}}
-        onSelect={(value) => { onSelect(cleanTerm(value));}}
-        renderMenu={menuRenderer}
-      />
+    <div
+      className="data-list"
+      onBlur={(e) => {
+        if(e.relatedTarget && e.relatedTarget !== containerRef.current) {
+          setShowMenu(false);
+          setActiveIndex(null);
+        }
+      }}
+      onKeyDown={(e) =>  {
+        const listLength = values.length;
+        //e.preventDefault();
+        e.stopPropagation();
+        if (e.keyCode === 13) {
+          if(activeIndex) {
+            const value = values[activeIndex];
+            onSelect && value && onSelect(value);
+            setShowMenu(false);
+            setActiveIndex(null);
+          }
+          else {
+            onSelect && onSelect(searchTerm);
+          }
+        }
+        else {
+          if(!showMenu) {
+            setShowMenu(true);
+          }
+          if (e.keyCode === 38) {
+            if(activeIndex === null) {
+              setActiveIndex(listLength - 1);
+            }
+            else {
+              setMouseSelect(false);
+              const newActiveIndex = activeIndex - 1;
+              setActiveIndex(newActiveIndex >= 0 ? newActiveIndex : listLength - 1);
+            }
+          } else if (e.keyCode === 40) {
+            if(activeIndex === null) {
+              setActiveIndex(0);
+            }
+            else {
+              setMouseSelect(false);
+              const newActiveIndex = activeIndex + 1;
+              setActiveIndex(newActiveIndex < listLength ? newActiveIndex : 0);
+            }
+          }
+          else {
+            setActiveIndex(null);
+          }
+        }
+      }}>
+      <span className="data-list-input" onClick={() => setShowMenu(true)}>
+        <input
+          type="text"
+          id={id}
+          list="subreddits"
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            if(onChange) {
+              onChange(e.target.value);
+            }
+          }}
+        />
+    </span>
+      {showMenu &&
+        <List
+            ref={listRef}
+            outerRef={containerRef}
+            width={"90%"}
+            height={350}
+            key={id}
+            style={{position: "absolute"}}
+            itemCount={values.length}
+            itemData={values}
+            itemSize={itemHeight}
+        >
+          {Row}
+        </List>
+      }
+     </div>
   );
 })
 
