@@ -89,6 +89,7 @@ export default function App() {
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
+  const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
@@ -271,7 +272,9 @@ export default function App() {
                     onPointerDown={handlePointerDown}
                     onPointerUp={handleClick}>
               <Stats/>
-              {usePostProcessing && <Effects useAA useUnrealBloom />}
+              {(usePostProcessing || useAntiAliasing) &&
+                <Effects useAA={useAntiAliasing} useUnrealBloom={usePostProcessing} />
+              }
                   <ThreePointVis
                     data={redditData}
                     clusters={showClusterHulls ? clusters : []}
@@ -432,6 +435,16 @@ export default function App() {
               type="checkbox"
               checked={usePostProcessing}
               onChange={(event) => setUsePostProcessing(event.target.checked)}
+            />
+            <br/>
+            <label htmlFor="useAntiAliasing">
+              Anti-aliasing (FXAA):
+            </label>
+            <input
+              id="useAntiAliasing"
+              type="checkbox"
+              checked={useAntiAliasing}
+              onChange={(event) => setUseAntiAliasing(event.target.checked)}
             />
             <br />
             <label htmlFor="usePerPointLighting">
