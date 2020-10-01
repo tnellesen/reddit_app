@@ -324,18 +324,11 @@ export default function App() {
                 </>)
             }
             <br />
-            <form
-              onSubmit={(event) => {
-                search(searchTerm);
-                event.preventDefault();
-              }}
-            >
-
               <DataList2
                 values={dataList.filter((value =>
                   value.toLowerCase().includes(cleanTerm(searchTerm))))}
                 id={"subreddits"}
-                onSelect={(value) => {search(value);}}
+                onSelect={(value) => search(value)}
                 onChange={(value) => setSearchTerm(value)}/>
               {/*<input
                 type="text"
@@ -352,10 +345,8 @@ export default function App() {
                 onSelect={(value) => {search(value);}}
                 onChange={(value) => setSearchTerm(value)}/> }
                */}
-
-              <button>Search</button>
+              <button onClick={() => search(searchTerm)}>Search</button>
               <br/>
-            </form>
             <label htmlFor="multiSelect">
               Multi Select:
             </label>

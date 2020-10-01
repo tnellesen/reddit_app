@@ -18,24 +18,25 @@ export interface DataListProps {
 export const cleanTerm = (term: string) =>
   term.toLowerCase().replace(/\s+/g, '')
 
-
+const itemHeight = 30;
 
 export const DataList2 = memo((props: DataListProps) => {
   const {values, id, onChange, onSelect} = props;
 
-  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
   const [lastHoverIndex, setLastHoverIndex] = React.useState(0);
   const [showMenu, setShowMenu] = React.useState(false);
   const [mouseSelect, setMouseSelect] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState("");
 
   const listRef = useRef<List>(null);
   const containerRef = useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
-    if (containerRef) {
+    if (containerRef.current) {
       containerRef?.current?.setAttribute('tabIndex', '0');
     }
-  }, [containerRef.current]);
+  }, [containerRef]);
 
   // @ts-ignore
   const Row = memo(({ data, index, style }) => {
@@ -43,63 +44,96 @@ export const DataList2 = memo((props: DataListProps) => {
     const item = data[index];
 
     return (
-      <div onMouseOver={() => {
+      <div className="data-list-item"
+        onMouseOver={() => {
         if(lastHoverIndex !== index && mouseSelect) {
           setActiveIndex(index);
           setLastHoverIndex(index);
         }
       }}
            onMouseMove={() => setMouseSelect(true)}
-           style={{...style, backgroundColor: index === activeIndex ?  "#0b195e" : "#111111"}}
+           style={{
+             ...style,
+             backgroundColor: index === activeIndex ?  "#0b195e" : "#111111",
+             verticalAlign: "center"
+           }}
             onClick={() => {
               setShowMenu(false) ;
+              setActiveIndex(null);
               onSelect && onSelect(values[index]);}}>
         {item}
       </div>
     );
-    // @ts-ignore
   }, areEqual)
 
+  React.useEffect(() => {
+    if(activeIndex !== null) {
+      listRef.current?.scrollToItem(activeIndex);
+    }
+  });
 
   return (
-    <div className="data-list">
-      <span className="data-list-input">
+    <div
+      className="data-list"
+      onBlur={(e) => {
+        if(e.relatedTarget && e.relatedTarget !== containerRef.current) {
+          setShowMenu(false);
+          setActiveIndex(null);
+        }
+      }}
+      onKeyDown={(e) =>  {
+        const listLength = values.length;
+        //e.preventDefault();
+        e.stopPropagation();
+        if (e.keyCode === 13) {
+          if(activeIndex) {
+            const value = values[activeIndex];
+            onSelect && value && onSelect(value);
+            setShowMenu(false);
+            setActiveIndex(null);
+          }
+          else {
+            onSelect && onSelect(searchTerm);
+          }
+        }
+        else {
+          if(!showMenu) {
+            setShowMenu(true);
+          }
+          if (e.keyCode === 38) {
+            if(activeIndex === null) {
+              setActiveIndex(listLength - 1);
+            }
+            else {
+              setMouseSelect(false);
+              const newActiveIndex = activeIndex - 1;
+              setActiveIndex(newActiveIndex >= 0 ? newActiveIndex : listLength - 1);
+            }
+          } else if (e.keyCode === 40) {
+            if(activeIndex === null) {
+              setActiveIndex(0);
+            }
+            else {
+              setMouseSelect(false);
+              const newActiveIndex = activeIndex + 1;
+              setActiveIndex(newActiveIndex < listLength ? newActiveIndex : 0);
+            }
+          }
+          else {
+            setActiveIndex(null);
+          }
+        }
+      }}>
+      <span className="data-list-input" onClick={() => setShowMenu(true)}>
         <input
           type="text"
           id={id}
           list="subreddits"
-          onChange={(e) => {onChange && onChange(e.target.value)}}
-          onClick={() => setShowMenu(true)}
-          onKeyDown={(e) =>  {
-            if (e.keyCode === 13) {
-              setShowMenu(false) ;
-              onSelect && onSelect(values[activeIndex]);
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            if(onChange) {
+              onChange(e.target.value);
             }
-            else if (e.keyCode === 38) {
-              if (activeIndex === 0) {
-                return;
-              }
-              setMouseSelect(false);
-              const newActiveIndex = activeIndex - 1;
-              setActiveIndex(newActiveIndex);
-              listRef.current?.scrollToItem(newActiveIndex)
-            } else if (e.keyCode === 40) {
-              if(!showMenu) {
-                setShowMenu(true);
-                return;
-              }
-              if (activeIndex === values.length - 1) {
-                return;
-              }
-              setMouseSelect(false);
-              const newActiveIndex = activeIndex + 1;
-              setActiveIndex(newActiveIndex);
-              listRef.current?.scrollToItem(newActiveIndex)
-            }
-          }}
-          onBlur={(e) => {
-            if(e.relatedTarget !== containerRef.current)
-            setShowMenu(false)
           }}
         />
     </span>
@@ -107,12 +141,13 @@ export const DataList2 = memo((props: DataListProps) => {
         <List
             ref={listRef}
             outerRef={containerRef}
-            width={"100%"}
-            height={220}
+            width={"90%"}
+            height={350}
             key={id}
+            style={{position: "absolute"}}
             itemCount={values.length}
             itemData={values}
-            itemSize={40}
+            itemSize={itemHeight}
         >
           {Row}
         </List>
