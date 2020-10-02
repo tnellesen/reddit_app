@@ -1,18 +1,34 @@
 import * as React from "react";
 import { ThreePointVis } from "./ThreePointVis/ThreePointVis";
 import "./styles.scss";
-//import redditClusters from "../data/redditClusters.json";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader";
 import {
   Group,
   Mesh,
   Object3D,
   BoxBufferGeometry,
-  MeshBasicMaterial
+  MeshBasicMaterial, Sphere, Vector3
 } from "three";
-import { ViewportProvider } from "./ViewportHooks";
 import useAxios from "axios-hooks";
 import {LoadingOverlay} from "./LoadingOverlay/LoadingOverlay";
+import {
+  CLIP_SCALE_FACTOR,
+  dataSetList,
+  dataSets,
+  MAX_POINT_RES,
+  MIN_VOXEL_RES,
+  POINT_RADIUS,
+  MAX_VOXEL_RES,
+  MIN_VIEW_DISTANCE,
+  MAX_VIEW_DISTANCE, MOBILE_THRESHOLD_WIDTH
+} from "./constants";
+import {Stats} from "./ThreePointVis/Stats";
+import {Camera, Canvas} from "react-three-fiber";
+import {Effects} from "./ThreePointVis/Effects";
+import * as THREE from "three";
+import {CollisionSphere} from "./CollisionSphere";
+import {useMemo} from "react";
+import {cleanTerm, DataList} from "./DataList";
 
 export interface Point {
   id: number;
@@ -32,6 +48,12 @@ export interface Cluster {
 
 const loader = new OBJLoader();
 
+const getAutoVoxelResolution = (numberOfPoints: number) => {
+  return Math.max(MIN_VOXEL_RES,
+    Math.min(MAX_VOXEL_RES,
+      Math.floor(Math.cbrt(numberOfPoints/80))))
+}
+
 const getMesh = (group: Group | Object3D): Mesh => {
   for (let i = 0; i < group.children.length; i++) {
     const child = group.children[i];
@@ -48,30 +70,42 @@ const getMesh = (group: Group | Object3D): Mesh => {
   return new Mesh(geometry, material);
 };
 
-export const pointCounts = [10000, 25000, 50000];
+export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000];
 
 export default function App() {
   const [redditData, setRedditData] = React.useState<Point[]>([]);
   const [clusters, setClusters] = React.useState<Cluster[]>([]);
-  const [clusterIndex, setClusterIndex] = React.useState<number>(0);
-  const [pointCount, setPointCoint] = React.useState<number>(10000);
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
-  const [selectedId, setSelectedId] = React.useState<number | null>(null);
+  const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
+  const [pointCount, setPointCount] = React.useState<number>(25000);
+  const [selectedPoints, setSelectedPoints] = React.useState<Point[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
+  const [multiSelect, setMultiSelect] = React.useState(false);
   const [pointResolution, setPointResolution] = React.useState(
-    Math.max(Math.min(Math.floor(window.innerWidth / 33), 32), 1)
+    Math.floor(Math.max(Math.min(window.innerWidth / 69, MAX_POINT_RES*0.75), 1))
   );
-  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(100);
+  const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
+  const [usePostProcessing, setUsePostProcessing] = React.useState(true);
+  const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [showClusterHulls, setShowClusterHulls] = React.useState(false);
+  const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
+  const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
+  const [debugVoxels, setDebugVoxels] = React.useState(false);
+  const [viewDistance, setViewDistance] = React.useState(
+    Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE));
+  const [camera, setCamera] = React.useState<Camera>();
+  const [dataList, setDataList] = React.useState<string[]>([]);
+
+
 
   const [{ data, loading, error }] = useAxios(
-    `https://redditexplorer.com/GetData/start:1,stop:${pointCount},dim:3,n_clusters:10,method:kmeans,cluster_hulls:yes`
+    `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`
   );
 
-  //const data = redditClusters ;
-
   React.useEffect(() => {
-    const newData = data
+    const newRedditData: Point[] = data
       ? data.data.map((point: any, index: number) => {
           return {
             id: index,
@@ -100,14 +134,24 @@ export default function App() {
         )
       : [];
 
-    if(newData && newData.length) {
-      setRedditData(newData);
+    if(newRedditData && newRedditData.length) {
+      setRedditData(newRedditData);
+      setDataList(newRedditData.filter(point => point.include).map(point => point.subreddit));
     }
     if(newClusters && newClusters.length) {
       setClusters(newClusters);
     }
-    setClusterCounts(newClusterCounts)
+    setClusterCounts(newClusterCounts);
   }, [maxPercentNSFW, data, clusterIndex]);
+
+
+  React.useEffect(() => {
+    const selectedSubreddits = selectedPoints.map(point => point.subreddit);
+    const newSelectedPoints: Point[] = redditData.filter(point => selectedSubreddits.includes(point.subreddit));
+
+    setSelectedPoints(newSelectedPoints);
+  }, [redditData])
+
 
   React.useEffect(() => {
     const clusterCount = clusterCounts[clusterIndex];
@@ -125,31 +169,123 @@ export default function App() {
     setClusters(newClusters);
   }, [clusterIndex, clusterCounts, data]);
 
-  const search = () => {
+  React.useEffect(() => {
+    setVoxelResolution(getAutoVoxelResolution(pointCount));
+  },[pointCount] )
+
+  React.useEffect(() => {
+    if(camera) {
+      camera.far = viewDistance;
+      camera.updateProjectionMatrix();
+    }
+  },[viewDistance, camera] )
+
+  const selectOrDeselectPoint = (index: number, isMultiSelect: boolean) => {
+    const selectedIds = selectedPoints.map(point => point.id);
+    if(isMultiSelect) {
+      if (!selectedIds.includes(index)) {
+        const newSelectedPoints = [...selectedPoints];
+        newSelectedPoints.push(redditData[index]);
+        setSelectedPoints(newSelectedPoints);
+      }
+      else {
+        const newSelectedPoints = [...selectedPoints];
+        setSelectedPoints(newSelectedPoints.filter(point => point.id !== index));
+      }
+    }
+    else {
+      if (selectedIds.length !== 1 || selectedIds[0] !== index) {
+        setSelectedPoints([redditData[index]]);
+      }
+      else {
+        setSelectedPoints([]);
+      }
+    }
+  }
+
+  const search = (term: string) => {
     redditData.forEach((point) => {
-      if (point.subreddit.toLowerCase() === searchTerm.toLowerCase()) {
-        setSelectedId(point.id);
+      if (point.include && point.subreddit.toLowerCase() === cleanTerm(term)) {
+        selectOrDeselectPoint(point.id, multiSelect);
       }
     });
   };
 
+  const mouseDownRef = React.useRef([0, 0]);
+  const raycaster = new THREE.Raycaster();
+  raycaster.params = {Points: { threshold: POINT_RADIUS * 0.01 }};
+
+  const collisionGeometry = useMemo(() => {
+    return redditData.filter(point => point.include).map(point => {
+        const sphere = new Sphere (new Vector3(point.x, point.y, point.z), POINT_RADIUS);
+        const collisionSphere = new CollisionSphere(sphere, point.id);
+        return collisionSphere;
+      }
+    )
+  }, [redditData]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    mouseDownRef.current[0] = event.clientX;
+    mouseDownRef.current[1] = event.clientY;
+  };
+
+  const handleClick = (event: React.PointerEvent<HTMLDivElement>) => {
+    const {clientX, clientY} = event;
+    const downDistance = Math.sqrt(
+      Math.pow(mouseDownRef.current[0] - clientX, 2) +
+      Math.pow(mouseDownRef.current[1] - clientY, 2)
+    );
+
+    // skip click if we dragged more than 5px distance
+    if (downDistance > 5) {
+      event.stopPropagation();
+      return;
+    }
+    if(camera) {
+      const mouse = {
+        x: ( event.clientX / window.innerWidth ) * 2 - 1,
+        y: -( event.clientY / window.innerHeight ) * 2 + 1
+      }
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(collisionGeometry);
+
+      if (intersects.length > 0) {
+        const intersected = intersects[0].object as CollisionSphere;
+        const clickedId = intersected.index;
+        selectOrDeselectPoint(clickedId, multiSelect || event.ctrlKey);
+      }
+    }
+  }
+
   return (
     <div className="App">
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
-      {error && <span>{error}</span>}
+      {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
-        <ViewportProvider key={redditData.length}>
-          <div className="vis-container">
-              <ThreePointVis
-                data={redditData}
-                clusters={clusters}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                pointResolution={pointResolution}
-              />
-            )
-          </div>
-        </ViewportProvider>)
+          <div className="vis-container" key={redditData.length}>
+            <Canvas concurrent
+                    camera={{position: [0, 0, 40], far: viewDistance}}
+                    onCreated={gl => setCamera(gl.camera)}
+                    onPointerDown={handlePointerDown}
+                    onPointerUp={handleClick}>
+              <Stats/>
+              {(usePostProcessing || useAntiAliasing) &&
+                <Effects useAA={useAntiAliasing} useUnrealBloom={usePostProcessing} />
+              }
+                  <ThreePointVis
+                    data={redditData}
+                    clusters={showClusterHulls ? clusters : []}
+                    selectedPoints={selectedPoints}
+                    onSelect={setSelectedPoints}
+                    pointResolution={pointResolution}
+                    voxelResolution={voxelResolution}
+                    debugVoxels={debugVoxels}
+                    usePerPointLighting={usePerPointLighting}
+                  />
+                )
+            </Canvas>
+          </div>)
       }
       <div className="controls">
         <div className="controls-title-bar">
@@ -163,78 +299,191 @@ export default function App() {
         </div>
         {showControls && (
           <>
-            {!loading && data && selectedId !== null && (
+            {!loading && data && selectedPoints.length !== 0 && (
               <div className="selected-point">
                 You selected{" "}
                 <a
-                  href={`https://www.reddit.com/r/${redditData[selectedId].subreddit}`}
+                  href={`https://www.reddit.com/r/${selectedPoints[selectedPoints.length-1].subreddit}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <strong>{redditData[selectedId].subreddit}</strong>
+                  <strong>{selectedPoints[selectedPoints.length-1].subreddit}</strong>
                 </a>
-                <p>X: {redditData[selectedId].x}</p>
-                <p>Y: {redditData[selectedId].y}</p>
-                <p>Z: {redditData[selectedId].z}</p>
-                <p>% NSFW: {redditData[selectedId].percentNsfw}</p>
+                <p>X: {selectedPoints[selectedPoints.length-1].x}</p>
+                <p>Y: {selectedPoints[selectedPoints.length-1].y}</p>
+                <p>Z: {selectedPoints[selectedPoints.length-1].z}</p>
+                <p>% NSFW: {selectedPoints[selectedPoints.length-1].percentNsfw}</p>
               </div>
             )}
-            <form
-              onSubmit={(event) => {
-                search();
-                event.preventDefault();
-              }}
-            >
-              <input
-                type="text"
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-              <button>Search</button>
-              <div>
-                <label htmlFor="resolutionSlider">
-                  {" "}
-                  Point Resolution: {pointResolution}
-                </label>
-                <input
-                  id="resolutionSlider"
-                  type="range"
-                  min="1"
-                  max="32"
-                  value={pointResolution}
-                  onChange={(event) => setPointResolution(+event.target.value)}
-                  step="1"
-                />
+            {selectedPoints.length > 0 &&
+              (<>
+                <button
+                    onClick={() => setSelectedPoints([])}>
+                  Clear Selection
+                </button>
                 <br />
-                <label htmlFor="nsfwSlider">
-                  {" "}
-                  Max % NSFW: {maxPercentNSFW}
-                </label>
-                <input
-                  id="nsfwSlider"
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  value={maxPercentNSFW}
-                  onChange={(event) => setMaxPercentNSFW(+event.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="numClusters" ># Clusters: </label>
-                <select name="numClusters" id="numClusters" onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}>
-                  {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="pointCount" ># Points: </label>
-                <select name="pointCount" id="pointCount" onChange={(event) => {
-                  setPointCoint(+event.target.value);
-                  setSelectedId(null);
-                }}>
-                  {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
-                </select>
-              </div>
-            </form>
+                </>)
+            }
+            <br />
+              <DataList
+                values={dataList.filter((value =>
+                  value.toLowerCase().includes(cleanTerm(searchTerm))))}
+                id={"subreddits"}
+                onSelect={(value) => search(value)}
+                onChange={(value) => setSearchTerm(value)}/>
+              <button onClick={() => search(searchTerm)}>Search</button>
+              <br/>
+            <label htmlFor="multiSelect">
+              Multi Select:
+            </label>
+            <input
+              id="multiSelect"
+              type="checkbox"
+              checked={multiSelect}
+              onChange={(event) => setMultiSelect(event.target.checked)}
+            />
+            <br />
+            <br/>
+            <label htmlFor="nsfwSlider">
+              {" "}
+              Max % NSFW Threads: {maxPercentNSFW}
+            </label>
+            <input
+              id="nsfwSlider"
+              type="range"
+              min={0}
+              max={100}
+              step={0.1}
+              value={maxPercentNSFW}
+              onChange={(event) => {
+                setMaxPercentNSFW(+event.target.value);
+                selectedPoints.filter(point => point.percentNsfw < +event.target.value)
+                setSelectedPoints(selectedPoints);
+                //}
+              }}
+            />
+            <div>
+              <label htmlFor="pointCount" ># Points: </label>
+              <select name="pointCount" id="pointCount" onChange={(event) => {
+                //setSelectedIds([]);
+                setPointCount(+event.target.value);
+              }}
+                      value={pointCount}>
+                {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="numClusters" ># Clusters: </label>
+              <select name="numClusters" id="numClusters"
+                      onChange={(event) => setClusterIndex(clusterCounts.indexOf(+event.target.value))}
+                      value={clusterCounts[clusterIndex]}>
+                {clusterCounts.map(clusterCount => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="dataSet" >Data Set: </label>
+              <select name="dataSet" id="dataSet"
+                      onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}
+                      value={dataSets[dataSet]}>
+                {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
+              </select>
+            </div>
+            <label htmlFor="showClusterHulls">
+              Show Cluster Hulls:
+            </label>
+            <input
+              id="showClusterHulls"
+              type="checkbox"
+              checked={showClusterHulls}
+              onChange={(event) => setShowClusterHulls(event.target.checked)}
+            />
+
+            <br/>
+            <br/>
+            <h4>Performance Options</h4>
+            <label htmlFor="usePostProcessing">
+              Enable Post FX:
+            </label>
+            <input
+              id="usePostProcessing"
+              type="checkbox"
+              checked={usePostProcessing}
+              onChange={(event) => setUsePostProcessing(event.target.checked)}
+            />
+            <br/>
+            <label htmlFor="useAntiAliasing">
+              Anti-aliasing (FXAA):
+            </label>
+            <input
+              id="useAntiAliasing"
+              type="checkbox"
+              checked={useAntiAliasing}
+              onChange={(event) => setUseAntiAliasing(event.target.checked)}
+            />
+            <br />
+            <label htmlFor="usePerPointLighting">
+              Per Point Lighting:
+            </label>
+            <input
+              id="usePerPointLighting"
+              type="checkbox"
+              checked={usePerPointLighting}
+              onChange={(event) => setUsePerPointLighting(event.target.checked)}
+            />
+            <br/>
+            <label htmlFor="resolutionSlider">
+              {" "}
+              Point Resolution: {pointResolution}
+            </label>
+            <input
+              id="resolutionSlider"
+              type="range"
+              min="1"
+              max={MAX_POINT_RES}
+              value={pointResolution}
+              onChange={(event) => setPointResolution(+event.target.value)}
+              step="1"
+            />
+            <br />
+            <label htmlFor="viewDistance">
+              {" "}
+              View Distance: {viewDistance}
+            </label>
+            <input
+              id="voxelResSlider"
+              type="range"
+              min={MIN_VIEW_DISTANCE}
+              max={MAX_VIEW_DISTANCE}
+              value={viewDistance}
+              onChange={(event) => setViewDistance(+event.target.value)}
+              step="1"
+            />
+
+            <h4>Advanced / Debug</h4>
+            <label htmlFor="voxelResSlider">
+              {" "}
+              Voxel Resolution: {voxelResolution}
+            </label>
+            <input
+              id="voxelResSlider"
+              type="range"
+              min={1}
+              max={MAX_VOXEL_RES}
+              value={voxelResolution}
+              onChange={(event) => setVoxelResolution(+event.target.value)}
+              step="1"
+            />
+            <br />
+            <label htmlFor="debugVoxels">
+              Show Voxel Debug:
+            </label>
+            <input
+              id="debugVoxels"
+              type="checkbox"
+              checked={debugVoxels}
+              onChange={(event) => setDebugVoxels(event.target.checked)}
+            />
+            {/*glContext && <DebugStats gl={glContext}/> */}
           </>
         )}
       </div>

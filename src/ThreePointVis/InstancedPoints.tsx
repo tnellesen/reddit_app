@@ -1,21 +1,19 @@
 import * as React from "react";
 import * as THREE from "three";
-import { SelectedId, SelectHandler } from "./ThreePointVis";
+import {SelectedIds, SelectedPoints, SelectHandler} from "./ThreePointVis";
 import { MouseEvent, useThree, useFrame, Camera } from "react-three-fiber";
 import { Point } from "../App";
 import { Frustum, Matrix4, Vector3, InstancedBufferAttribute } from "three";
-import { SCALE_FACTOR, clusterColors } from "../constants";
+import {SCALE_FACTOR, clusterColors, POINT_RADIUS} from "../constants";
 import {MutableRefObject, useEffect, useState} from "react";
 
 interface InstancedPointsProps {
   data: Point[];
-  selectedId: SelectedId;
+  selectedPoints: SelectedPoints;
   onSelect: SelectHandler;
   enableCulling?: boolean;
   pointSegments: number;
 }
-
-const pointRadius = 1 * SCALE_FACTOR;
 
 // re-use for instance computations
 const scratchColor = new THREE.Color();
@@ -34,7 +32,7 @@ function updateInstancedMeshMatrices(
   pointIndexToId: number[],
   colorArray: Float32Array,
   colorAttrib: MutableRefObject<InstancedBufferAttribute | undefined>,
-  selectedId: SelectedId
+  selectedIds: SelectedIds
 ): number {
   let visibleInstanceCount = 0;
   if (mesh) {
@@ -51,7 +49,7 @@ function updateInstancedMeshMatrices(
 
       scratchPos.set(x, y, z);
 
-      scratchSphere.set(scratchPos, pointRadius);
+      scratchSphere.set(scratchPos, POINT_RADIUS);
 
       if (
         (!frustum.intersectsSphere(scratchSphere) && enableCulling) ||
@@ -61,7 +59,6 @@ function updateInstancedMeshMatrices(
       }
 
       scratchObject3D.position.set(x, y, z);
-      scratchObject3D.rotation.set(Math.PI * 0.5, 0, 0);
       scratchObject3D.updateMatrix();
       mesh.setMatrixAt(visibleInstanceCount, scratchObject3D.matrix);
       pointIndexToId[visibleInstanceCount] = data[i].id;
@@ -73,7 +70,7 @@ function updateInstancedMeshMatrices(
 
     updateColors(
       data,
-      selectedId,
+      selectedIds,
       pointIndexToId,
       visibleInstanceCount,
       colorArray,
@@ -85,11 +82,9 @@ function updateInstancedMeshMatrices(
 
 const SELECTED_COLOR = "#6f6";
 
-
-
 const updateColors = (
   data: Point[],
-  selectedId: SelectedId,
+  selectedIds: SelectedIds,
   pointIndexToId: number[],
   maxCount: number,
   colorArray: Float32Array,
@@ -98,7 +93,7 @@ const updateColors = (
   for (let i = 0; i < maxCount; ++i) {
     const point = data[pointIndexToId[i]];
     scratchColor.set(
-      point.id === selectedId ? SELECTED_COLOR : clusterColors[point.cluster]
+      selectedIds.includes(point.id) ? SELECTED_COLOR : clusterColors[point.cluster]
     );
     scratchColor.toArray(colorArray, i * 3);
 
@@ -109,8 +104,9 @@ const updateColors = (
 };
 
 const useMousePointInteraction = (
-  selectedId: SelectedId,
+  selectedPoints: Point[],
   onSelect: SelectHandler,
+  data: Point[],
   pointIndexToId: number[]
 ) => {
   // track mousedown position to skip click handlers on drags
@@ -135,10 +131,15 @@ const useMousePointInteraction = (
 
     const id = instanceId !== undefined ? pointIndexToId[instanceId] : -1;
 
-    if (id === selectedId) {
-      onSelect(null);
-    } else if (id || id === 0) {
-      onSelect(id);
+    const selectedIds = selectedPoints.map(point => point.id);
+    if (!selectedIds.includes(id)) {
+      const newSelectedPoints = [...selectedPoints];
+      newSelectedPoints.push(data[id]);
+      onSelect(newSelectedPoints);
+    }
+    else {
+      const newSelectedPoints = [...selectedPoints];
+      onSelect(newSelectedPoints.filter(point => point.id !== id));
     }
   };
 
@@ -146,7 +147,7 @@ const useMousePointInteraction = (
 };
 
 export const InstancedPoints = (props: InstancedPointsProps) => {
-  const { data, selectedId, onSelect, enableCulling, pointSegments } = props;
+  const { data, selectedPoints, onSelect, enableCulling, pointSegments } = props;
   const pointIndexToId = data.map((point) => point.id);
 
   const meshRef = React.useRef<THREE.InstancedMesh>();
@@ -173,17 +174,50 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
         pointIndexToId,
         colorArray,
         colorAttrib,
-        selectedId
+        selectedPoints.map(point => point.id)
       );
     }
   });
 
   const { handleClick, handlePointerDown } = useMousePointInteraction(
-    selectedId,
+    selectedPoints,
     onSelect,
+    data,
     pointIndexToId
   );
 
+
+  const renderInstancedMesh = selectedPoints.map(
+      function(point) {
+        return(
+            <group
+                position={[
+                  point.x,
+                  point.y,
+                  point.z
+                ]}
+            >
+              <pointLight
+                  distance={19 * SCALE_FACTOR}
+                  position={[0, 0, 0]}
+                  intensity={2.5}
+                  decay={30}
+                  color={SELECTED_COLOR}
+              />
+              <pointLight
+                  distance={10 * SCALE_FACTOR}
+                  position={[0, 0, 0]}
+                  intensity={1.5}
+                  decay={1}
+                  color={SELECTED_COLOR}
+              />
+            </group>
+        )
+      }
+  )
+
+  console.log("renderInstancedMesh:", renderInstancedMesh);
+  console.log("selectedPoints:", selectedPoints);
   return (
     <>
       <instancedMesh
@@ -200,7 +234,7 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
       >
           <sphereBufferGeometry
               attach="geometry"
-              args={[pointRadius, pointSegments, pointSegments]}
+              args={[POINT_RADIUS, pointSegments, pointSegments]}
               key={pointSegments}
           >
               <instancedBufferAttribute
@@ -211,29 +245,8 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
           </sphereBufferGeometry>
           <meshStandardMaterial attach="material" vertexColors/>
       </instancedMesh>
-      {selectedId !== null && (
-        <group
-          position={[
-            data[selectedId].x,
-            data[selectedId].y,
-            data[selectedId].z
-          ]}
-        >
-          <pointLight
-            distance={19 * SCALE_FACTOR}
-            position={[0, 0, 0]}
-            intensity={2.5}
-            decay={30}
-            color={SELECTED_COLOR}
-          />
-          <pointLight
-            distance={10 * SCALE_FACTOR}
-            position={[0, 0, 0]}
-            intensity={1.5}
-            decay={1}
-            color={SELECTED_COLOR}
-          />
-        </group>
+      {selectedPoints.length > 0 && (
+        renderInstancedMesh
       )}
     </>
   );

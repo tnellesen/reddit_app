@@ -6,6 +6,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
+import {BloomPass} from 'three/examples/jsm/postprocessing/BloomPass.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 declare global {
@@ -27,6 +28,10 @@ declare global {
         UnrealBloomPass,
         typeof UnrealBloomPass
       >;
+      bloomPass: ReactThreeFiber.Object3DNode<
+        BloomPass,
+        typeof BloomPass
+        >;
       shaderPass: ReactThreeFiber.Object3DNode<ShaderPass, typeof ShaderPass>;
       renderPass: ReactThreeFiber.Object3DNode<RenderPass, typeof RenderPass>;
     }

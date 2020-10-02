@@ -11,15 +11,21 @@
     "axios-hooks": "2.1.0",
     "node-sass": "^4.14.1",
     "react": "^16.12.0",
+    "react-autocomplete": "^1.8.1",
     "react-dom": "^16.12.0",
-    "react-three-fiber": "4.2.20",
+    "react-three-fiber": "^4.2.21",
+    "react-window": "^1.8.5",
     "stats.js": "0.17.0",
-    "three": "0.119.1"
+    "three": "^0.119.1"
   },
   "devDependencies": {
     "@types/react": "16.9.19",
+    "@types/react-autocomplete": "^1.8.5",
     "@types/react-dom": "16.9.5",
+    "@types/react-virtualized": "^9.21.10",
+    "@types/react-window": "^1.8.2",
     "react-scripts": "^3.4.1",
+    "react-virtualized": "^9.22.2",
     "typescript": "3.7.5"
   },
   "scripts": {

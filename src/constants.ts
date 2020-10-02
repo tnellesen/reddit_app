@@ -1,5 +1,27 @@
 export const SCALE_FACTOR = 1;
-export const CLIP_SCALE_FACTOR = 1.5;
+export const CLIP_SCALE_FACTOR = 0.005;
+
+export const POINT_RADIUS = 1.0 * SCALE_FACTOR;
+
+export const MAX_POINT_RES = 32;
+
+export const MIN_VOXEL_RES = 6;
+export const MAX_VOXEL_RES = 12;
+
+export const MIN_VIEW_DISTANCE = 100;
+export const MAX_VIEW_DISTANCE = 20000;
+
+export const SELECTED_COLOR = "#5E5";
+
+export type dataSetList = {[name: string]: string};
+
+export const dataSets: dataSetList = {
+  Latest: "new_2.0",
+  Legacy: "original"
+}
+
+// Threshold for auto disabling expensive graphical effects
+export const MOBILE_THRESHOLD_WIDTH = 950; // A little under half 1080p
 
 //https://coolors.co/263b3b-0b195e-bc3c00-773b08-541818-340534-0e2412-3b0c1a-790579-0d620b
 export const clusterColors = [
