@@ -29,6 +29,12 @@ import * as THREE from "three";
 import {CollisionSphere} from "./CollisionSphere";
 import {useMemo} from "react";
 import {cleanTerm, DataList} from "./DataList";
+import {
+  useHistory,
+  useLocation,
+} from "react-router-dom";
+import qs from 'query-string';
+import { History, Location } from 'history';
 
 export interface Point {
   id: number;
@@ -72,13 +78,28 @@ const getMesh = (group: Group | Object3D): Mesh => {
 
 export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000];
 
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
+const setQueryParam = (key: string, value: string, history: History, location: Location) => {
+  const queryParams = qs.parse(location.search);
+  const newQueries = {...queryParams, [key]: value};
+  history.push({search: qs.stringify(newQueries)});
+}
+
 export default function App() {
+  let query = useQuery();
+  let history = useHistory();
+  let location = useLocation();
+  const pointCount = parseInt(query.get("point_count") || '0', 10) || 25000;
+  const dataSet = query.get("data_set") || dataSets[Object.keys(dataSets)[0]];
+  const selection = (query.get("selection") || "").split(',') || [];
+
   const [redditData, setRedditData] = React.useState<Point[]>([]);
   const [clusters, setClusters] = React.useState<Cluster[]>([]);
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
   const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
-  const [pointCount, setPointCount] = React.useState<number>(25000);
-  const [selectedPoints, setSelectedPoints] = React.useState<Point[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [showControls, setShowControls] = React.useState(true);
   const [multiSelect, setMultiSelect] = React.useState(false);
@@ -90,19 +111,20 @@ export default function App() {
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
-  const [dataSet, setDataSet] = React.useState<string>(dataSets[Object.keys(dataSets)[0]]);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
   const [debugVoxels, setDebugVoxels] = React.useState(false);
   const [viewDistance, setViewDistance] = React.useState(
     Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE));
   const [camera, setCamera] = React.useState<Camera>();
   const [dataList, setDataList] = React.useState<string[]>([]);
-
-
+  
+  const selectedPoints = useMemo(() => redditData.filter(point => selection.includes(point.subreddit)), [selection, redditData]);
 
   const [{ data, loading, error }] = useAxios(
     `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`
   );
+
+  const setParam = (key: string, value: string) => setQueryParam(key, value, history, location);
 
   React.useEffect(() => {
     const newRedditData: Point[] = data
@@ -144,15 +166,6 @@ export default function App() {
     setClusterCounts(newClusterCounts);
   }, [maxPercentNSFW, data, clusterIndex]);
 
-
-  React.useEffect(() => {
-    const selectedSubreddits = selectedPoints.map(point => point.subreddit);
-    const newSelectedPoints: Point[] = redditData.filter(point => selectedSubreddits.includes(point.subreddit));
-
-    setSelectedPoints(newSelectedPoints);
-  }, [redditData])
-
-
   React.useEffect(() => {
     const clusterCount = clusterCounts[clusterIndex];
 
@@ -184,21 +197,21 @@ export default function App() {
     const selectedIds = selectedPoints.map(point => point.id);
     if(isMultiSelect) {
       if (!selectedIds.includes(index)) {
-        const newSelectedPoints = [...selectedPoints];
-        newSelectedPoints.push(redditData[index]);
-        setSelectedPoints(newSelectedPoints);
+        const newSelection = [...selection];
+        newSelection.push(redditData[index].subreddit);
+        setParam('selection', newSelection.join(','));
       }
       else {
-        const newSelectedPoints = [...selectedPoints];
-        setSelectedPoints(newSelectedPoints.filter(point => point.id !== index));
+        const newSelectedPoints = [...selectedPoints].filter(point => point.id !== index);
+        setParam('selection', newSelectedPoints.map(p =>p.subreddit).join(','));
       }
     }
     else {
       if (selectedIds.length !== 1 || selectedIds[0] !== index) {
-        setSelectedPoints([redditData[index]]);
+        setParam('selection', redditData[index].subreddit);
       }
       else {
-        setSelectedPoints([]);
+        setParam('selection', '');
       }
     }
   }
@@ -277,7 +290,7 @@ export default function App() {
                     data={redditData}
                     clusters={showClusterHulls ? clusters : []}
                     selectedPoints={selectedPoints}
-                    onSelect={setSelectedPoints}
+                    onSelect={selectOrDeselectPoint}
                     pointResolution={pointResolution}
                     voxelResolution={voxelResolution}
                     debugVoxels={debugVoxels}
@@ -318,7 +331,7 @@ export default function App() {
             {selectedPoints.length > 0 &&
               (<>
                 <button
-                    onClick={() => setSelectedPoints([])}>
+                    onClick={() => setParam('selection', '')}>
                   Clear Selection
                 </button>
                 <br />
@@ -358,7 +371,7 @@ export default function App() {
               onChange={(event) => {
                 setMaxPercentNSFW(+event.target.value);
                 selectedPoints.filter(point => point.percentNsfw < +event.target.value)
-                setSelectedPoints(selectedPoints);
+                setParam('selection', selectedPoints.map(p => p.subreddit).join(','));
                 //}
               }}
             />
@@ -366,7 +379,7 @@ export default function App() {
               <label htmlFor="pointCount" ># Points: </label>
               <select name="pointCount" id="pointCount" onChange={(event) => {
                 //setSelectedIds([]);
-                setPointCount(+event.target.value);
+                setParam('point_count', event.target.value)
               }}
                       value={pointCount}>
                 {pointCounts.map(pointCount => <option value={pointCount} key = {pointCount}>{pointCount}</option>)}
@@ -383,7 +396,7 @@ export default function App() {
             <div>
               <label htmlFor="dataSet" >Data Set: </label>
               <select name="dataSet" id="dataSet"
-                      onChange={(event) => setDataSet(dataSets[event.target.value as keyof dataSetList])}
+                      onChange={(event) => setParam('data_set', dataSets[event.target.value as keyof dataSetList])}
                       value={dataSets[dataSet]}>
                 {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
               </select>

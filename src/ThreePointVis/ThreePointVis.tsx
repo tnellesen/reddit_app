@@ -14,8 +14,7 @@ import {Color, Vector3} from "three";
 export type SelectedPoints = Point[];
 export type SelectedIds = number[];
 export type SelectHandler = (
-  point: SelectedPoints | ((prevVar: SelectedPoints) => SelectedPoints)
-) => void;
+  point: number, isMultiSelect: boolean) => void;
 
 interface ThreePointVisProps {
   data: Point[];
