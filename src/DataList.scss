@@ -1,0 +1,16 @@
+.data-list-item {
+  line-height: 1.9;
+}
+
+.data-list-input {
+  position: relative;
+  &:after {
+    content: "\25BC";
+    color: black;
+    position: absolute;
+    right: 5%;
+    top: 2%;
+  }
+}
+
+

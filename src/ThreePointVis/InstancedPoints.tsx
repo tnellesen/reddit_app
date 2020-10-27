@@ -104,9 +104,7 @@ const updateColors = (
 };
 
 const useMousePointInteraction = (
-  selectedPoints: Point[],
   onSelect: SelectHandler,
-  data: Point[],
   pointIndexToId: number[]
 ) => {
   // track mousedown position to skip click handlers on drags
@@ -131,16 +129,7 @@ const useMousePointInteraction = (
 
     const id = instanceId !== undefined ? pointIndexToId[instanceId] : -1;
 
-    const selectedIds = selectedPoints.map(point => point.id);
-    if (!selectedIds.includes(id)) {
-      const newSelectedPoints = [...selectedPoints];
-      newSelectedPoints.push(data[id]);
-      onSelect(newSelectedPoints);
-    }
-    else {
-      const newSelectedPoints = [...selectedPoints];
-      onSelect(newSelectedPoints.filter(point => point.id !== id));
-    }
+    onSelect(id, event.ctrlKey);
   };
 
   return { handlePointerDown, handleClick };
@@ -180,9 +169,7 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
   });
 
   const { handleClick, handlePointerDown } = useMousePointInteraction(
-    selectedPoints,
     onSelect,
-    data,
     pointIndexToId
   );
 
