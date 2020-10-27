@@ -17,6 +17,7 @@ export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
   Latest: "new_2.0",
+  Testing: "new_4.0",
   Legacy: "original"
 }
 
