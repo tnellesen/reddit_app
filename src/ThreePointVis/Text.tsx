@@ -22,7 +22,7 @@ export interface TextProps {
 export function Text(props: TextProps) {
   const { message, x, y, z, position = Position.LEFT } = props;
 
-  let width = (25 + 7.5 * message.length) * SCALE_FACTOR;
+  let width = (21 + 7 * message.length) * SCALE_FACTOR;
   let height = 25 * SCALE_FACTOR;
   const resolutionScaleFactor = 20;
 
@@ -38,7 +38,7 @@ export function Text(props: TextProps) {
     context?.fillRect(0, 0, width, height);
 
     const fontSize = 12;
-    context!.font = `bold ${fontSize}px courier, mono, sans-serif`;
+    context!.font = `bold ${fontSize}px monaco, monospace, sans-serif`;
     context!.fillStyle = "black";
     context!.textAlign = "center";
     context!.textBaseline = "middle";
