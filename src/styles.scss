@@ -14,7 +14,6 @@ div {
 
 .App {
   font-family: sans-serif;
-  text-align: center;
   height: 100vh;
   width: 100vw;
   background-color: #000;
@@ -40,7 +39,7 @@ div {
     background: rgba(0, 0, 0, 0.75);
     padding: 1em;
     color: #fff;
-    width: 250px;
+    width: 315px;
     border-radius: 1em;
     touch-action: none; // Disable pinch to zoom on iOS devices
     overflow: auto;
@@ -60,11 +59,22 @@ div {
     input, button, select {
       font-size: 1em;
     }
+
+    .selected-points-info {
+      text-align: start;
+      vertical-align: baseline;
+      background: rgba(15, 15, 15, 0.9);
+      padding: 0.5em;
+      margin: 0.5em 0;
+      border: 1px solid grey;
+      max-height: 20vh;
+      overflow: auto;
+    }
   }
 
   .error-message {
     color: white;
-    font-size: 10em;
+    font-size: 5em;
   }
 
   @media only screen and (max-width: $mobileBreakpoint) {

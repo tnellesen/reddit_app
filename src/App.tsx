@@ -35,6 +35,7 @@ import {
 } from "react-router-dom";
 import qs from 'query-string';
 import { History, Location } from 'history';
+import {PointInfo} from "./PointInfo/PointInfo";
 
 export interface Point {
   id: number;
@@ -313,20 +314,12 @@ export default function App() {
         {showControls && (
           <>
             {!loading && data && selectedPoints.length !== 0 && (
-              <div className="selected-point">
-                You selected{" "}
-                <a
-                  href={`https://www.reddit.com/r/${selectedPoints[selectedPoints.length-1].subreddit}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <strong>{selectedPoints[selectedPoints.length-1].subreddit}</strong>
-                </a>
-                <p>X: {selectedPoints[selectedPoints.length-1].x}</p>
-                <p>Y: {selectedPoints[selectedPoints.length-1].y}</p>
-                <p>Z: {selectedPoints[selectedPoints.length-1].z}</p>
-                <p>% NSFW: {selectedPoints[selectedPoints.length-1].percentNsfw}</p>
-              </div>
+              <>
+                <h3>Selection:</h3>
+                <div className="selected-points-info">
+                  {selectedPoints.map(point => <PointInfo point={point} />)}
+                </div>
+              </>
             )}
             {selectedPoints.length > 0 &&
               (<>
