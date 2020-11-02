@@ -281,7 +281,7 @@ export default function App() {
       {!loading && !error && redditData && redditData.length && (
           <div className="vis-container" key={redditData.length}>
             <Canvas concurrent
-                    camera={{position: [0, 0, 40], far: viewDistance}}
+                    camera={{position: [0, 0, 600], far: viewDistance}}
                     onCreated={gl => setCamera(gl.camera)}
                     onPointerDown={handlePointerDown}
                     onPointerUp={handleClick}>
@@ -341,7 +341,7 @@ export default function App() {
                     </button>
                   </div>
                   <div className="selected-points-info">
-                    {selectedPoints.map(point => <PointInfo point={point} />)}
+                    {selectedPoints.map(point => <PointInfo key={point.id} point={point} />)}
                   </div>
                 </>
               )}
