@@ -76,7 +76,7 @@ export const DataList = memo((props: DataListProps) => {
     <div
       className="data-list"
       onBlur={(e) => {
-        if(e.relatedTarget !== containerRef.current) {
+        if(containerRef?.current?.contains(e.relatedTarget as Node)) {
           setShowMenu(false);
           setActiveIndex(null);
         }
