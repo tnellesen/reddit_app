@@ -124,7 +124,7 @@ export const DataList = memo((props: DataListProps) => {
           }
         }
       }}>
-      <span className="data-list-input" onClick={() => setShowMenu(true)}>
+      <div className="data-list-input" onClick={() => setShowMenu(true)}>
         <input
           type="text"
           id={id}
@@ -136,13 +136,13 @@ export const DataList = memo((props: DataListProps) => {
             }
           }}
         />
-    </span>
+    </div>
       {showMenu &&
         <List
             ref={listRef}
             outerRef={containerRef}
-            width={"90%"}
-            height={350}
+            width={"100%"}
+            height={250}
             key={id}
             style={{position: "absolute"}}
             itemCount={values.length}

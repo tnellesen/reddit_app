@@ -3,6 +3,7 @@ import {Point} from "../App";
 import {memo} from "react";
 
 import "./PointInfo.scss";
+import {expandChar, minimizeChar} from "../constants";
 
 interface PointsInfoProps {
   point: Point;
@@ -32,7 +33,7 @@ export const PointInfo = memo((props: PointsInfoProps) => {
         <button
           className="toggle-info-button"
           onClick={() => setShowMoreInfo(!showMoreInfo)}>
-          {showMoreInfo ? '-' : 'v'}
+          {showMoreInfo ? minimizeChar : expandChar}
         </button>
       </div>
       {showMoreInfo &&

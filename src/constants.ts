@@ -13,6 +13,9 @@ export const MAX_VIEW_DISTANCE = 20000;
 
 export const SELECTED_COLOR = "#5E5";
 
+export const minimizeChar = '⁠–⁠';
+export const expandChar = '+';
+
 export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
