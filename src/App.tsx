@@ -400,6 +400,7 @@ export default function App() {
                   {Object.keys(dataSets).map(dataSet => <option value={dataSet} key={dataSet}>{dataSet}</option>)}
                 </select>
               </div>
+              <br/>
               <label htmlFor="showClusterHulls">
                 Show Cluster Hulls:
               </label>

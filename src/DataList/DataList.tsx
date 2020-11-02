@@ -76,7 +76,7 @@ export const DataList = memo((props: DataListProps) => {
     <div
       className="data-list"
       onBlur={(e) => {
-        if(e.relatedTarget && e.relatedTarget !== containerRef.current) {
+        if(e.relatedTarget !== containerRef.current) {
           setShowMenu(false);
           setActiveIndex(null);
         }
@@ -142,7 +142,7 @@ export const DataList = memo((props: DataListProps) => {
             ref={listRef}
             outerRef={containerRef}
             width={"100%"}
-            height={250}
+            height={190}
             key={id}
             style={{position: "absolute"}}
             itemCount={values.length}
