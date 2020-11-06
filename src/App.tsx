@@ -106,14 +106,14 @@ export default function App() {
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
   const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [showControls, setShowControls] = React.useState(width > MOBILE_THRESHOLD_WIDTH);
+  const [showControls, setShowControls] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showAdvancedControls, setShowAdvancedControls] = React.useState(false);
   const [multiSelect, setMultiSelect] = React.useState(false);
   const [pointResolution, setPointResolution] = React.useState(
     Math.floor(Math.max(Math.min(window.innerWidth / 69, MAX_POINT_RES*0.75), 1))
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
-  const [usePostProcessing, setUsePostProcessing] = React.useState(true);
+  const [usePostProcessing, setUsePostProcessing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio/2));
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
