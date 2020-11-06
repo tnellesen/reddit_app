@@ -38,6 +38,7 @@ import { History, Location } from 'history';
 import {PointInfo} from "./PointInfo/PointInfo";
 import {Tab, TabList, TabPanel, Tabs} from "react-tabs";
 import {range} from "./util";
+import {useWindowSize} from "./ViewportHooks";
 
 export interface Point {
   id: number;
@@ -98,13 +99,14 @@ export default function App() {
   const pointCount = parseInt(query.get("point_count") || '0', 10) || 25000;
   const dataSet = query.get("data_set") || dataSets[Object.keys(dataSets)[0]];
   const selection = (query.get("selection") || "").split(',') || [];
+  const {width, height} = useWindowSize();
 
   const [redditData, setRedditData] = React.useState<Point[]>([]);
   const [clusters, setClusters] = React.useState<Cluster[]>([]);
   const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
   const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [showControls, setShowControls] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [showControls, setShowControls] = React.useState(width > MOBILE_THRESHOLD_WIDTH);
   const [showAdvancedControls, setShowAdvancedControls] = React.useState(false);
   const [multiSelect, setMultiSelect] = React.useState(false);
   const [pointResolution, setPointResolution] = React.useState(
@@ -113,7 +115,7 @@ export default function App() {
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
-  const [resolutionScale, setResolutionScale] = React.useState(1);
+  const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio/2));
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
@@ -275,6 +277,18 @@ export default function App() {
       }
     }
   }
+
+  const resolutionScales = useMemo(() => range(0.5, window.devicePixelRatio, 0.5), [window.devicePixelRatio])
+
+
+  const resolutionOptions = useMemo(() =>
+    resolutionScales.map((scaleFactor, index) => {
+      const suffix = `${scaleFactor * width}x${scaleFactor * height} ${index === resolutionScales.length - 1 ? "(native)" : ""}`;
+      return <option value={scaleFactor}
+                     key={scaleFactor}>
+        {`${scaleFactor}x -- ${suffix}`}
+      </option>;
+    }), [width, height]);
 
   return (
     <div className="App">
@@ -474,17 +488,17 @@ export default function App() {
                 onChange={(event) => setViewDistance(+event.target.value)}
                 step="1"
               />
-              <br />
-              <label htmlFor="pixelResolutionMultiplier">
-                {" "}
-                Resolution Scale: {resolutionScale}
-              </label>
-              <select name="pixelResolutionMultiplier" id="pixelResolutionMultiplier"
-                      onChange={(event) => setResolutionScale(+event.target.value)}
-                      value={resolutionScale}>
-                {range(0.5, window.devicePixelRatio, 0.5).map(scaleFactor => <option value={scaleFactor} key={scaleFactor}>{scaleFactor}</option>)}
-              </select>
-
+              <div className="resolution-scale-section">
+                <label htmlFor="pixelResolutionMultiplier">
+                  Resolution Scale:&nbsp;
+                </label>
+                <select name="pixelResolutionMultiplier" id="pixelResolutionMultiplier"
+                        onChange={(event) => setResolutionScale(+event.target.value)}
+                        value={resolutionScale}>
+                  {resolutionOptions}
+                  }
+                </select>
+              </div>
               <div className="advanced-settings-title-bar">
                 <h4>Advanced: </h4>
                 <button

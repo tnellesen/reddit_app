@@ -118,6 +118,23 @@ h4 {
       max-height: 20vh;
       overflow: auto;
     }
+
+    .resolution-scale-section {
+      display: flex;
+
+      >* {
+        box-sizing: border-box;
+      }
+
+      label {
+        flex-shrink: 0;
+      }
+
+      input, select {
+        flex-shrink: 1;
+        min-width: 0;
+      }
+    }
   }
 
   .error-message {
