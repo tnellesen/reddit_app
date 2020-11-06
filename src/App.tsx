@@ -37,6 +37,7 @@ import qs from 'query-string';
 import { History, Location } from 'history';
 import {PointInfo} from "./PointInfo/PointInfo";
 import {Tab, TabList, TabPanel, Tabs} from "react-tabs";
+import {range} from "./util";
 
 export interface Point {
   id: number;
@@ -112,6 +113,7 @@ export default function App() {
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [resolutionScale, setResolutionScale] = React.useState(1);
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
@@ -279,8 +281,10 @@ export default function App() {
       {loading && <LoadingOverlay message={"Loading dollops of dope data"}/>}
       {error && <span className={"error-message"}>{error.message}</span>}
       {!loading && !error && redditData && redditData.length && (
-          <div className="vis-container" key={redditData.length}>
+          <div className="vis-container" key={`${redditData.length} ${resolutionScale}`}>
             <Canvas concurrent
+                    gl = {{antialias: false}}
+                    pixelRatio={resolutionScale}
                     camera={{position: [0, 0, 600], far: viewDistance}}
                     onCreated={gl => setCamera(gl.camera)}
                     onPointerDown={handlePointerDown}
@@ -462,7 +466,7 @@ export default function App() {
                 View Distance: {viewDistance}
               </label>
               <input
-                id="voxelResSlider"
+                id="viewDistance"
                 type="range"
                 min={MIN_VIEW_DISTANCE}
                 max={MAX_VIEW_DISTANCE}
@@ -470,6 +474,16 @@ export default function App() {
                 onChange={(event) => setViewDistance(+event.target.value)}
                 step="1"
               />
+              <br />
+              <label htmlFor="pixelResolutionMultiplier">
+                {" "}
+                Resolution Scale: {resolutionScale}
+              </label>
+              <select name="pixelResolutionMultiplier" id="pixelResolutionMultiplier"
+                      onChange={(event) => setResolutionScale(+event.target.value)}
+                      value={resolutionScale}>
+                {range(0.5, window.devicePixelRatio, 0.5).map(scaleFactor => <option value={scaleFactor} key={scaleFactor}>{scaleFactor}</option>)}
+              </select>
 
               <div className="advanced-settings-title-bar">
                 <h4>Advanced: </h4>
