@@ -115,7 +115,7 @@ export default function App() {
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(true);
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
-  const [resolutionScale, setResolutionScale] = React.useState(1);
+  const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio/2));
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
