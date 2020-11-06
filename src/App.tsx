@@ -488,18 +488,17 @@ export default function App() {
                 onChange={(event) => setViewDistance(+event.target.value)}
                 step="1"
               />
-              <br />
-              <label htmlFor="pixelResolutionMultiplier">
-                {" "}
-                Resolution Scale:
-              </label>
-              <select name="pixelResolutionMultiplier" id="pixelResolutionMultiplier"
-                      onChange={(event) => setResolutionScale(+event.target.value)}
-                      value={resolutionScale}>
-                {resolutionOptions}
-                }
-              </select>
-
+              <div className="resolution-scale-section">
+                <label htmlFor="pixelResolutionMultiplier">
+                  Resolution Scale:&nbsp;
+                </label>
+                <select name="pixelResolutionMultiplier" id="pixelResolutionMultiplier"
+                        onChange={(event) => setResolutionScale(+event.target.value)}
+                        value={resolutionScale}>
+                  {resolutionOptions}
+                  }
+                </select>
+              </div>
               <div className="advanced-settings-title-bar">
                 <h4>Advanced: </h4>
                 <button
