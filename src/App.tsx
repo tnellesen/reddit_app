@@ -110,7 +110,7 @@ export default function App() {
   const [showAdvancedControls, setShowAdvancedControls] = React.useState(false);
   const [multiSelect, setMultiSelect] = React.useState(false);
   const [pointResolution, setPointResolution] = React.useState(
-    Math.floor(Math.max(Math.min(window.innerWidth / 69, MAX_POINT_RES*0.75), 1))
+    Math.floor(Math.max(Math.min(4 + window.innerWidth / 210 , MAX_POINT_RES*0.75), 1))
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
   const [usePostProcessing, setUsePostProcessing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
