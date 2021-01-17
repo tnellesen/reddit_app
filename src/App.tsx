@@ -14,7 +14,7 @@ import { History, Location } from 'history';
 import {
   Tab, TabList, TabPanel, Tabs,
 } from 'react-tabs';
-import { ThreePointVis } from './ThreePointVis/ThreePointVis.tsx';
+import { ThreePointVis } from './ThreePointVis/ThreePointVis';
 import { PointInfo } from './PointInfo/PointInfo';
 import { cleanTerm, DataList } from './DataList/DataList';
 import { CollisionSphere } from './CollisionSphere';

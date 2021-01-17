@@ -211,8 +211,6 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
     ),
   );
 
-  console.log('renderInstancedMesh:', renderInstancedMesh);
-  console.log('selectedPoints:', selectedPoints);
   return (
     <>
       <instancedMesh

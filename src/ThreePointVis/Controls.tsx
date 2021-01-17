@@ -119,13 +119,6 @@ export const Controls = memo((props: ControlsProps) => {
   useEventListener('keydown', handleKeyDown);
   useEventListener('keyup', handleKeyUp);
 
-  /*
-  const testFactor = viewport.factor / 20;
-  console.log("Factor: " + viewport.factor);
-  console.log("Width: " + viewport.width);
-  console.log("scale: " + testFactor);
-  */
-
   return (
     <orbitControls
       ref={controls}

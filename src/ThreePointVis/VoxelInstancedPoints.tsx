@@ -72,9 +72,6 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         const voxelIndex = Math.floor(x / gridStep)
           + Math.floor(y / gridStep) * voxelResolution
           + Math.floor(z / gridStep) * voxelResolution * voxelResolution;
-        if (newVoxels[voxelIndex] === undefined) {
-          console.log(voxelIndex);
-        }
         newVoxels[voxelIndex].push(point);
       }
     });
