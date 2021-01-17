@@ -58,7 +58,7 @@ const loader = new OBJLoader();
 
 const getAutoVoxelResolution = (numberOfPoints: number) => Math.max(MIN_VOXEL_RES,
   Math.min(MAX_VOXEL_RES,
-    Math.floor(Math.cbrt(numberOfPoints / 80))));
+    Math.floor(Math.cbrt(numberOfPoints / 20))));
 
 const getMesh = (group: Group | Object3D): Mesh => {
   for (let i = 0; i < group.children.length; i++) {

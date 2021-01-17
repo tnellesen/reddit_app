@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import {
   InstancedBufferAttribute, MeshLambertMaterial, Object3D, Vector3,
 } from 'three';
-import { memo, useMemo } from 'react';
+import { FunctionComponent, useMemo } from 'react';
 import { Point } from '../App';
 import { clusterColors, POINT_RADIUS } from '../constants';
 
@@ -36,7 +36,8 @@ const updateColors = (
   }
 };
 
-export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
+// eslint-disable-next-line max-len
+export const VoxelInstancedPoints: FunctionComponent<VoxelInstancedPointsProps> = (props: VoxelInstancedPointsProps) => {
   const {
     data, pointSegments, voxelResolution, debugVoxels,
   } = props;
@@ -114,7 +115,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         );
       }
     }
-  }, [voxels, scratchObject3D, colorArrays, debugVoxels]);
+  });
 
   return (
     <>
@@ -150,4 +151,4 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
       )
     </>
   );
-});
+};
