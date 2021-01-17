@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import './styles.scss';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import * as THREE from 'three';
@@ -88,6 +88,9 @@ const setQueryParam = (key: string, value: string, history: History, location: L
   history.push({ search: qs.stringify(newQueries) });
 };
 
+const raycaster = new THREE.Raycaster();
+raycaster.params = { Points: { threshold: POINT_RADIUS * 0.01 } };
+
 export default function App() {
   const query = useQuery();
   const history = useHistory();
@@ -129,7 +132,8 @@ export default function App() {
     `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`,
   );
 
-  const setParam = (key: string, value: string) => setQueryParam(key, value, history, location);
+  const setParam = useCallback((key: string, value: string) =>
+    setQueryParam(key, value, history, location), [history, location]);
 
   React.useEffect(() => {
     const newRedditData: Point[] = data
@@ -192,7 +196,7 @@ export default function App() {
     }
   }, [viewDistance, camera]);
 
-  const selectOrDeselectPoint = (index: number, isMultiSelect: boolean) => {
+  const selectOrDeselectPoint = useCallback((index: number, isMultiSelect: boolean) => {
     const selectedIds = selectedPoints.map((point) => point.id);
     if (isMultiSelect) {
       if (!selectedIds.includes(index)) {
@@ -208,19 +212,17 @@ export default function App() {
     } else {
       setParam('selection', '');
     }
-  };
+  }, [redditData, selectedPoints, selection, setParam]);
 
-  const search = (term: string) => {
+  const search = useCallback((term: string) => {
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === cleanTerm(term)) {
         selectOrDeselectPoint(point.id, multiSelect);
       }
     });
-  };
+  }, [multiSelect, redditData, selectOrDeselectPoint]);
 
   const mouseDownRef = React.useRef([0, 0]);
-  const raycaster = new THREE.Raycaster();
-  raycaster.params = { Points: { threshold: POINT_RADIUS * 0.01 } };
 
   const collisionGeometry = useMemo(() => redditData.filter((point) => point.include)
     .map((point) => {
@@ -228,12 +230,12 @@ export default function App() {
       return new CollisionSphere(sphere, point.id);
     }), [redditData]);
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     mouseDownRef.current[0] = event.clientX;
     mouseDownRef.current[1] = event.clientY;
-  };
+  }, []);
 
-  const handleClick = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handleClick = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const { clientX, clientY } = event;
     const downDistance = Math.sqrt(
       mouseDownRef.current[0] - clientX ** 2
@@ -260,7 +262,7 @@ export default function App() {
         selectOrDeselectPoint(clickedId, multiSelect || event.ctrlKey);
       }
     }
-  };
+  }, [camera, collisionGeometry, multiSelect, raycaster, selectOrDeselectPoint]);
 
   const resolutionScales = useMemo(() => range(0.5, window.devicePixelRatio, 0.5), [window.devicePixelRatio]);
 

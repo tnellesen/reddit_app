@@ -34,19 +34,19 @@ export function Effects(props: EffectsProps) {
   ]);
   useFrame(() => (composer.current ? composer.current.render() : null), 1);
 
-  const unrealBloom = {
+  const unrealBloom = useMemo(() => ({
     resolution: aspect,
     strength: 0.3,
     radius: 0.02,
     threshold: 0.19,
-  };
+  }), [aspect]);
 
-  const bloom = {
+  const bloom = useMemo(() => ({
     strength: 1,
     kernelSize: 25,
     sigma: 4,
     targetResolution: 256,
-  };
+  }), []);
 
   return (
     <effectComposer ref={composer} args={[gl]}>

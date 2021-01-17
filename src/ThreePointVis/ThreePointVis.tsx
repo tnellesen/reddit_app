@@ -51,7 +51,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
 
   const selectedPointRes = useMemo(() => Math.min(pointResolution * 4, MAX_POINT_RES), [pointResolution]);
 
-  const renderSelectedPoints = selectedPoints.map(
+  const renderSelectedPoints = useMemo(()=> selectedPoints.map(
     (point) => (
       <group
         key={point.id}
@@ -107,7 +107,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
       </group>
     ),
 
-  );
+  ), [selectedPointRes, selectedPoints, usePerPointLighting, width]);
 
   return (
     <>

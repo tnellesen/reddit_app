@@ -46,7 +46,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
   // re-use for instance computations
   const meshRefs = React.useRef<THREE.InstancedMesh[]>([]);
   const colorAttribs = React.useRef<THREE.InstancedBufferAttribute[]>([]);
-  const colorArrays: Float32Array[] = [];
+  const colorArrays: Float32Array[] = useMemo(() => [], []);
   for (let i = 0; i < voxels.length; i++) {
     colorArrays[i] = new Float32Array(voxels[i].length * 3);
   }
@@ -83,45 +83,37 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
   const sharedMaterial = useMemo(() => new MeshLambertMaterial({ vertexColors: true }), []);
 
   React.useEffect(() => {
-    let numEmptyVoxels = 0;
     for (let i = 0; i < voxels.length; ++i) {
       const voxel = voxels[i];
-      if (voxel.length > 0) {
-        const mesh = meshRefs.current[i];
-        const points = voxel.map((p) => new Vector3(p.x, p.y, p.z));
+      const mesh = meshRefs.current[i];
+      const points = voxel.map((p) => new Vector3(p.x, p.y, p.z));
 
-        if (mesh) {
-          mesh.matrixAutoUpdate = false; // TODO try for clusters
-          mesh.updateMatrix();
-          // set the transform matrix for each instance
-          for (let j = 0; j < points.length; ++j) {
-            const { x } = points[j];
-            const { y } = points[j];
-            const { z } = points[j];
+      if (mesh) {
+        mesh.matrixAutoUpdate = false; // TODO try for clusters
+        mesh.updateMatrix();
+        // set the transform matrix for each instance
+        for (let j = 0; j < points.length; ++j) {
+          const { x } = points[j];
+          const { y } = points[j];
+          const { z } = points[j];
 
-            scratchObject3D.position.set(x, y, z);
-            scratchObject3D.updateMatrix();
-            mesh.setMatrixAt(j, scratchObject3D.matrix);
-          }
-
-          mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points);
-          mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, POINT_RADIUS);
-          mesh.instanceMatrix.needsUpdate = true;
-          mesh.frustumCulled = true;
-          updateColors(
-            voxel,
-            colorArrays[i],
-            colorAttribs.current[i],
-            debugVoxels ? i : undefined,
-          );
+          scratchObject3D.position.set(x, y, z);
+          scratchObject3D.updateMatrix();
+          mesh.setMatrixAt(j, scratchObject3D.matrix);
         }
-      } else {
-        numEmptyVoxels++;
+
+        mesh.geometry.boundingSphere = new THREE.Sphere().setFromPoints(points);
+        mesh.geometry.boundingSphere.radius = Math.max(mesh.geometry.boundingSphere.radius, POINT_RADIUS);
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.frustumCulled = true;
+        updateColors(
+          voxel,
+          colorArrays[i],
+          colorAttribs.current[i],
+          debugVoxels ? i : undefined,
+        );
       }
     }
-    console.log('Total Voxels: ', voxels.length);
-    console.log('Empty Voxels: ', numEmptyVoxels);
-    console.log('Percent Empty Voxels ', (numEmptyVoxels / voxels.length) * 100);
   }, [voxels, scratchObject3D, colorArrays, debugVoxels]);
 
   return (

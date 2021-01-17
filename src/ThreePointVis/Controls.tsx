@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import useEventListener from '@use-it/event-listener';
 import * as THREE from 'three';
 // import { useState } from "react";
-import { memo } from 'react';
+import {memo, useCallback} from 'react';
 
 interface ControlsProps {
   target: THREE.Vector3 | null;
@@ -43,15 +43,15 @@ export const Controls = memo((props: ControlsProps) => {
   let targetAnimationComplete = false;
   let positionAnimationComplete = false;
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!keyPressed[event.key]) {
       keyPressed[event.key] = new Date().getTime();
     }
-  };
+  }, [keyPressed]);
 
-  const handleKeyUp = (event: KeyboardEvent) => {
+  const handleKeyUp = useCallback((event: KeyboardEvent) => {
     delete keyPressed[event.key];
-  };
+  }, [keyPressed]);
 
   // Reference: httpwdwdawds://maxrohde.com/2019/10/25/camera-movement-with-three-js/
   useFrame((_, delta) => {
