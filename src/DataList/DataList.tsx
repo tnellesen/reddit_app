@@ -1,8 +1,8 @@
-//Based on: https://medium.com/@leofabrikant/react-autocomplete-with-react-virtualized-to-handle-massive-search-results-7865a8786972
-import * as React from "react";
-import {areEqual, FixedSizeList as List} from "react-window";
-import "./DataList.scss";
-import {memo, useRef} from "react";
+// Based on: https://medium.com/@leofabrikant/react-autocomplete-with-react-virtualized-to-handle-massive-search-results-7865a8786972
+import * as React from 'react';
+import { areEqual, FixedSizeList as List } from 'react-window';
+import './DataList.scss';
+import { memo, useRef } from 'react';
 
 export interface DataListProps {
   values: string[];
@@ -15,19 +15,20 @@ export interface DataListProps {
   ) => void;
 }
 
-export const cleanTerm = (term: string) =>
-  term.toLowerCase().replace(/\s+/g, '')
+export const cleanTerm = (term: string) => term.toLowerCase().replace(/\s+/g, '');
 
 const itemHeight = 30;
 
 export const DataList = memo((props: DataListProps) => {
-  const {values, id, onChange, onSelect} = props;
+  const {
+    values, id, onChange, onSelect,
+  } = props;
 
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null);
   const [lastHoverIndex, setLastHoverIndex] = React.useState(0);
   const [showMenu, setShowMenu] = React.useState(false);
   const [mouseSelect, setMouseSelect] = React.useState(false);
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState('');
 
   const listRef = useRef<List>(null);
   const containerRef = useRef<HTMLElement | null>(null);
@@ -39,91 +40,95 @@ export const DataList = memo((props: DataListProps) => {
   }, [containerRef]);
 
   // @ts-ignore
+  // eslint-disable-next-line react/prop-types
   const Row = memo(({ data, index, style }) => {
     // Data passed to List as "itemData" is available as props.data
     const item = data[index];
 
     return (
-      <div className="data-list-item"
+      // eslint-disable-next-line max-len
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/mouse-events-have-key-events,jsx-a11y/no-static-element-interactions
+      <div
+        className="data-list-item"
         onMouseOver={() => {
-        if(lastHoverIndex !== index && mouseSelect) {
-          setActiveIndex(index);
-          setLastHoverIndex(index);
-        }
-      }}
-           onMouseMove={() => setMouseSelect(true)}
-           style={{
-             ...style,
-             backgroundColor: index === activeIndex ?  "#0b195e" : "#111111",
-             verticalAlign: "center"
-           }}
-            onClick={() => {
-              setShowMenu(false) ;
-              setActiveIndex(null);
-              onSelect && onSelect(values[index]);}}>
+          if (lastHoverIndex !== index && mouseSelect) {
+            setActiveIndex(index);
+            setLastHoverIndex(index);
+          }
+        }}
+        onMouseMove={() => setMouseSelect(true)}
+        style={{
+          ...style,
+          backgroundColor: index === activeIndex ? '#0b195e' : '#111111',
+          verticalAlign: 'center',
+        }}
+        onClick={() => {
+          setShowMenu(false);
+          setActiveIndex(null);
+          onSelect && onSelect(values[index]);
+        }}
+      >
         {item}
       </div>
     );
-  }, areEqual)
+  }, areEqual);
 
   React.useEffect(() => {
-    if(activeIndex !== null) {
+    if (activeIndex !== null) {
       listRef.current?.scrollToItem(activeIndex);
     }
   });
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       className="data-list"
       onBlur={(e) => {
-        if(containerRef?.current?.contains(e.relatedTarget as Node)) {
+        if (containerRef?.current?.contains(e.relatedTarget as Node)) {
           setShowMenu(false);
           setActiveIndex(null);
         }
       }}
-      onKeyDown={(e) =>  {
+      onKeyDown={(e) => {
         const listLength = values.length;
-        //e.preventDefault();
+        // e.preventDefault();
         e.stopPropagation();
         if (e.keyCode === 13) {
-          if(activeIndex) {
+          if (activeIndex) {
             const value = values[activeIndex];
             onSelect && value && onSelect(value);
             setShowMenu(false);
             setActiveIndex(null);
-          }
-          else {
+          } else {
             onSelect && onSelect(searchTerm);
           }
-        }
-        else {
-          if(!showMenu) {
+        } else {
+          if (!showMenu) {
             setShowMenu(true);
           }
           if (e.keyCode === 38) {
-            if(activeIndex === null) {
+            if (activeIndex === null) {
               setActiveIndex(listLength - 1);
-            }
-            else {
+            } else {
               setMouseSelect(false);
               const newActiveIndex = activeIndex - 1;
               setActiveIndex(newActiveIndex >= 0 ? newActiveIndex : listLength - 1);
             }
           } else if (e.keyCode === 40) {
-            if(activeIndex === null) {
+            if (activeIndex === null) {
               setActiveIndex(0);
-            }
-            else {
+            } else {
               setMouseSelect(false);
               const newActiveIndex = activeIndex + 1;
               setActiveIndex(newActiveIndex < listLength ? newActiveIndex : 0);
             }
-          }
-          else {
+          } else {
             setActiveIndex(null);
           }
         }
-      }}>
+      }}
+    >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */}
       <div className="data-list-input" onClick={() => setShowMenu(true)}>
         <input
           type="text"
@@ -131,28 +136,28 @@ export const DataList = memo((props: DataListProps) => {
           list="subreddits"
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            if(onChange) {
+            if (onChange) {
               onChange(e.target.value);
             }
           }}
         />
-    </div>
-      {showMenu &&
+      </div>
+      {showMenu
+        && (
         <List
-            ref={listRef}
-            outerRef={containerRef}
-            width={"100%"}
-            height={190}
-            key={id}
-            style={{position: "absolute"}}
-            itemCount={values.length}
-            itemData={values}
-            itemSize={itemHeight}
+          ref={listRef}
+          outerRef={containerRef}
+          width="100%"
+          height={190}
+          key={id}
+          style={{ position: 'absolute' }}
+          itemCount={values.length}
+          itemData={values}
+          itemSize={itemHeight}
         >
           {Row}
         </List>
-      }
-     </div>
+        )}
+    </div>
   );
-})
-
+});

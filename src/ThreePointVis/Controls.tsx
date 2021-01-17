@@ -1,10 +1,10 @@
-import * as React from "react";
-import { extend, useThree, useFrame } from "react-three-fiber";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import useEventListener from "@use-it/event-listener";
-import * as THREE from "three";
-//import { useState } from "react";
-import {memo} from "react";
+import * as React from 'react';
+import { extend, useThree, useFrame } from 'react-three-fiber';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import useEventListener from '@use-it/event-listener';
+import * as THREE from 'three';
+// import { useState } from "react";
+import { memo } from 'react';
 
 interface ControlsProps {
   target: THREE.Vector3 | null;
@@ -22,13 +22,12 @@ const ANIMATION_SPEED = 5;
 
 const origin = new THREE.Vector3(0, 0, 0);
 
-const hasCameraChanged = (prevProps: ControlsProps, nextProps: ControlsProps): boolean => {
-  return (prevProps.distance === nextProps.distance
+const hasCameraChanged = (prevProps: ControlsProps, nextProps: ControlsProps):
+  boolean => (prevProps.distance === nextProps.distance
     && prevProps.position && nextProps.position
     && prevProps.target && nextProps.target
     && prevProps.position.equals(nextProps.position)
-    && prevProps.target.equals(nextProps.target)) || false
-}
+    && prevProps.target.equals(nextProps.target)) || false;
 
 export const Controls = memo((props: ControlsProps) => {
   const { target, position, distance } = props;
@@ -60,12 +59,11 @@ export const Controls = memo((props: ControlsProps) => {
     const internalPosition = camera.position;
 
     // interpolate target
-    if ( !targetAnimationComplete
+    if (!targetAnimationComplete
       && target
       && internalTarget.distanceTo(target) > TARGET_THRESHOLD) {
       internalTarget.lerp(target, ANIMATION_SPEED * delta);
-    }
-    else {
+    } else {
       targetAnimationComplete = true;
     }
 
@@ -73,14 +71,13 @@ export const Controls = memo((props: ControlsProps) => {
       !positionAnimationComplete
       && position
       && target
-      && internalTarget.distanceTo(target) <
-        TARGET_THRESHOLD * TARGET_THRESHOLD_MULTIPLIER
+      && internalTarget.distanceTo(target)
+        < TARGET_THRESHOLD * TARGET_THRESHOLD_MULTIPLIER
       && internalPosition.distanceTo(position) > cameraDistance
 
     ) {
       internalPosition.lerp(position, ANIMATION_SPEED * delta);
-    }
-    else if (!positionAnimationComplete && position && internalPosition.distanceTo(position) < cameraDistance) {
+    } else if (!positionAnimationComplete && position && internalPosition.distanceTo(position) < cameraDistance) {
       internalPosition.sub(position).setLength(cameraDistance).add(position);
       positionAnimationComplete = true;
     }
@@ -90,8 +87,8 @@ export const Controls = memo((props: ControlsProps) => {
       const [key, start] = e;
       const duration = new Date().getTime() - start;
 
-      var xAxis = new THREE.Vector3(1, 0, 0);
-      var zAxis = new THREE.Vector3(0, 0, 1);
+      const xAxis = new THREE.Vector3(1, 0, 0);
+      const zAxis = new THREE.Vector3(0, 0, 1);
 
       // increase momentum if key pressed longer
       let momentum = Math.sqrt(duration + 200) * 0.01 + 0.05;
@@ -100,16 +97,16 @@ export const Controls = memo((props: ControlsProps) => {
       momentum = (momentum * delta) / 0.008;
 
       switch (key) {
-        case "w":
+        case 'w':
           camera.translateOnAxis(zAxis, -momentum);
           break;
-        case "s":
+        case 's':
           camera.translateOnAxis(zAxis, momentum);
           break;
-        case "d":
+        case 'd':
           camera.translateOnAxis(xAxis, momentum);
           break;
-        case "a":
+        case 'a':
           camera.translateOnAxis(xAxis, -momentum);
           break;
         default:
@@ -119,8 +116,8 @@ export const Controls = memo((props: ControlsProps) => {
     controls.current!.update();
   });
 
-  useEventListener("keydown", handleKeyDown);
-  useEventListener("keyup", handleKeyUp);
+  useEventListener('keydown', handleKeyDown);
+  useEventListener('keyup', handleKeyUp);
 
   /*
   const testFactor = viewport.factor / 20;

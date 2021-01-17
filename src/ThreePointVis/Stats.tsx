@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useFrame } from "react-three-fiber";
-import StatsImpl from "stats.js";
+import { useState, useEffect } from 'react';
+import { useFrame } from 'react-three-fiber';
+import StatsImpl from 'stats.js';
 
 export function Stats() {
   const [stats] = useState(() => new StatsImpl());

@@ -1,9 +1,9 @@
-import * as React from "react";
-import {Point} from "../App";
-import {memo} from "react";
+import * as React from 'react';
+import { memo } from 'react';
+import { Point } from '../App';
 
-import "./PointInfo.scss";
-import {expandChar, minimizeChar} from "../constants";
+import './PointInfo.scss';
+import { expandChar, minimizeChar } from '../constants';
 
 interface PointsInfoProps {
   point: Point;
@@ -13,13 +13,26 @@ export const PointInfo = memo((props: PointsInfoProps) => {
   const { point } = props;
   const [showMoreInfo, setShowMoreInfo] = React.useState(false);
 
-  const extraPointInfo =
+  const extraPointInfo = (
     <>
-      <p>% NSFW: {point.percentNsfw}</p>
-      <p>X: {point.x}</p>
-      <p>Y: {point.y}</p>
-      <p>Z: {point.z}</p>
-    </>;
+      <p>
+        % NSFW:
+        {point.percentNsfw}
+      </p>
+      <p>
+        X:
+        {point.x}
+      </p>
+      <p>
+        Y:
+        {point.y}
+      </p>
+      <p>
+        Z:
+        {point.z}
+      </p>
+    </>
+  );
 
   return (
     <div className="point-info" key={point.id}>
@@ -27,18 +40,20 @@ export const PointInfo = memo((props: PointsInfoProps) => {
         <a
           href={`https://www.reddit.com/r/${point.subreddit}`}
           target="_blank"
-          rel="noopener noreferrer">
+          rel="noopener noreferrer"
+        >
           <strong>{point.subreddit}</strong>
         </a>
         <button
+          type="button"
           className="toggle-info-button"
-          onClick={() => setShowMoreInfo(!showMoreInfo)}>
+          onClick={() => setShowMoreInfo(!showMoreInfo)}
+        >
           {showMoreInfo ? minimizeChar : expandChar}
         </button>
       </div>
-      {showMoreInfo &&
-        extraPointInfo
-      }
+      {showMoreInfo
+        && extraPointInfo}
     </div>
   );
 });
