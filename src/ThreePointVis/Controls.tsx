@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import useEventListener from '@use-it/event-listener';
 import * as THREE from 'three';
 // import { useState } from "react";
-import {memo, useCallback} from 'react';
+import { memo, useCallback } from 'react';
 
 interface ControlsProps {
   target: THREE.Vector3 | null;
