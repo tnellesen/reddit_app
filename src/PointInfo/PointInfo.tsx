@@ -57,3 +57,5 @@ export const PointInfo = memo((props: PointsInfoProps) => {
     </div>
   );
 });
+
+PointInfo.displayName = 'PointInfo';
