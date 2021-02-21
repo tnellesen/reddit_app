@@ -57,6 +57,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-unused-expressions': 1,
     'no-unused-expressions': 0,
+    'no-nested-ternary': 0,
     'babel/no-unused-expressions': 1,
     'react-hooks/rules-of-hooks': 'error', // Checks rules of Hooks
     'react-hooks/exhaustive-deps': 'warn', // Checks effect dependencies

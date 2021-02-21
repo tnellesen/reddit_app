@@ -8,10 +8,11 @@ export interface DataListProps {
   values: string[];
   id: string;
   onSelect?: (
-    selected: string
+    selected: string,
+    isMultiSelect?: boolean
   ) => void;
   onChange?: (
-    selected: string
+    newText: string
   ) => void;
 }
 
@@ -31,7 +32,27 @@ export const DataList = memo((props: DataListProps) => {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const listRef = useRef<List>(null);
-  const containerRef = useRef<HTMLElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const handleClick = (e: MouseEvent) => {
+    if (containerRef?.current?.contains(e.target as Node)) {
+      // inside click
+      return;
+    }
+    setShowMenu(false);
+    setActiveIndex(null);
+  };
+
+  // https://medium.com/@pitipatdop/little-neat-trick-to-capture-click-outside-with-react-hook-ba77c37c7e82
+  React.useEffect(() => {
+    // add when mounted
+    document.addEventListener('mousedown', handleClick);
+
+    // return function to be called when unmounted
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (containerRef.current) {
@@ -62,10 +83,10 @@ export const DataList = memo((props: DataListProps) => {
           backgroundColor: index === activeIndex ? '#0b195e' : '#111111',
           verticalAlign: 'center',
         }}
-        onClick={() => {
+        onClick={(e) => {
           setShowMenu(false);
           setActiveIndex(null);
-          onSelect && onSelect(values[index]);
+          onSelect && onSelect(values[index], e.ctrlKey);
         }}
       >
         {item}
@@ -83,30 +104,24 @@ export const DataList = memo((props: DataListProps) => {
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       className="data-list"
-      onBlur={(e) => {
-        if (containerRef?.current?.contains(e.relatedTarget as Node)) {
-          setShowMenu(false);
-          setActiveIndex(null);
-        }
-      }}
       onKeyDown={(e) => {
         const listLength = values.length;
         // e.preventDefault();
         e.stopPropagation();
-        if (e.keyCode === 13) {
+        if (e.keyCode === 13) { // enter
           if (activeIndex) {
             const value = values[activeIndex];
-            onSelect && value && onSelect(value);
+            onSelect && value && onSelect(value, e.ctrlKey);
             setShowMenu(false);
             setActiveIndex(null);
           } else {
-            onSelect && onSelect(searchTerm);
+            onSelect && onSelect(searchTerm, e.ctrlKey);
           }
         } else {
           if (!showMenu) {
             setShowMenu(true);
           }
-          if (e.keyCode === 38) {
+          if (e.keyCode === 38) { // up arrow
             if (activeIndex === null) {
               setActiveIndex(listLength - 1);
             } else {
@@ -114,7 +129,7 @@ export const DataList = memo((props: DataListProps) => {
               const newActiveIndex = activeIndex - 1;
               setActiveIndex(newActiveIndex >= 0 ? newActiveIndex : listLength - 1);
             }
-          } else if (e.keyCode === 40) {
+          } else if (e.keyCode === 40) { // down arrow
             if (activeIndex === null) {
               setActiveIndex(0);
             } else {
@@ -122,6 +137,25 @@ export const DataList = memo((props: DataListProps) => {
               const newActiveIndex = activeIndex + 1;
               setActiveIndex(newActiveIndex < listLength ? newActiveIndex : 0);
             }
+          } else if (e.keyCode === 33) { // page up
+            if (activeIndex === null) {
+              setActiveIndex(0);
+            } else {
+              setMouseSelect(false);
+              const newActiveIndex = activeIndex - 6;
+              setActiveIndex(newActiveIndex >= 0 ? newActiveIndex : 0);
+            }
+          } else if (e.keyCode === 34) { // page down
+            if (activeIndex === null) {
+              setActiveIndex(listLength - 1);
+            } else {
+              setMouseSelect(false);
+              const newActiveIndex = activeIndex + 6;
+              setActiveIndex(newActiveIndex < listLength ? newActiveIndex : listLength - 1);
+            }
+          } else if (e.keyCode === 27) { // escape
+            setActiveIndex(null);
+            setShowMenu(false);
           } else {
             setActiveIndex(null);
           }
@@ -129,11 +163,12 @@ export const DataList = memo((props: DataListProps) => {
       }}
     >
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */}
-      <div className="data-list-input" onClick={() => setShowMenu(true)}>
+      <div className="data-list-input" ref={containerRef}>
         <input
           type="text"
           id={id}
           list="subreddits"
+          onClick={() => setShowMenu(true)}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             if (onChange) {
@@ -141,23 +176,24 @@ export const DataList = memo((props: DataListProps) => {
             }
           }}
         />
-      </div>
-      {showMenu
+        {showMenu
         && (
-        <List
-          ref={listRef}
-          outerRef={containerRef}
-          width="100%"
-          height={190}
-          key={id}
-          style={{ position: 'absolute' }}
-          itemCount={values.length}
-          itemData={values}
-          itemSize={itemHeight}
-        >
-          {Row}
-        </List>
+          <List
+            ref={listRef}
+            width="100%"
+            height={190}
+            key={id}
+            style={{ position: 'absolute' }}
+            itemCount={values.length}
+            itemData={values}
+            itemSize={itemHeight}
+          >
+            {Row}
+          </List>
         )}
+      </div>
     </div>
   );
 });
+
+DataList.displayName = 'DataList';
