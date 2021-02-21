@@ -2,6 +2,7 @@ import * as React from 'react';
 import { memo } from 'react';
 import useAxios from 'axios-hooks';
 import { Point } from '../App';
+import './PointDetailsSection.scss';
 
 interface PointsDetailsSectionProps {
   point: Point;
@@ -49,8 +50,8 @@ export const PointDetailsSection = memo((props: PointsDetailsSectionProps) => {
   }, [data, loading, error]);
 
   return (
-    <>
-      <p>
+    <div className="point-details-section">
+      <div className="point-detail-info">
         <h4># Subscribers</h4>
         :&nbsp;
         {pointDetails
@@ -58,8 +59,8 @@ export const PointDetailsSection = memo((props: PointsDetailsSectionProps) => {
             ? pointDetails.subscribers
             : noInfoMessage
           : loadingMessage}
-      </p>
-      <p>
+      </div>
+      <div className="point-detail-info">
         <h4>About</h4>
         :&nbsp;
         {pointDetails
@@ -67,8 +68,8 @@ export const PointDetailsSection = memo((props: PointsDetailsSectionProps) => {
             ? pointDetails.description
             : noInfoMessage
           : loadingMessage}
-      </p>
-      <p>
+      </div>
+      <div className="point-detail-info">
         <h4>Date Created</h4>
         :&nbsp;
         {pointDetails
@@ -76,13 +77,13 @@ export const PointDetailsSection = memo((props: PointsDetailsSectionProps) => {
             ? pointDetails.dateCreated.toLocaleString()
             : noInfoMessage
           : loadingMessage}
-      </p>
-      <p>
+      </div>
+      <div className="point-detail-info">
         <h4>% NSFW</h4>
         :&nbsp;
         {point.percentNsfw}
-      </p>
-    </>
+      </div>
+    </div>
   );
 });
 
