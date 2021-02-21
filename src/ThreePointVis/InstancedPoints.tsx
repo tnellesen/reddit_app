@@ -244,3 +244,5 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
     </>
   );
 };
+
+InstancedPoints.displayName = 'InstancedPoints';

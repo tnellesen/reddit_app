@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { memo } from 'react';
 import { Point } from '../App';
+import { PointDetailsSection } from './PointDetailsSection';
+import { expandChar, minimizeChar } from '../constants';
 
 import './PointInfo.scss';
-import { expandChar, minimizeChar } from '../constants';
 
 interface PointsInfoProps {
   point: Point;
@@ -12,27 +13,6 @@ interface PointsInfoProps {
 export const PointInfo = memo((props: PointsInfoProps) => {
   const { point } = props;
   const [showMoreInfo, setShowMoreInfo] = React.useState(false);
-
-  const extraPointInfo = (
-    <>
-      <p>
-        % NSFW:
-        {point.percentNsfw}
-      </p>
-      <p>
-        X:
-        {point.x}
-      </p>
-      <p>
-        Y:
-        {point.y}
-      </p>
-      <p>
-        Z:
-        {point.z}
-      </p>
-    </>
-  );
 
   return (
     <div className="point-info" key={point.id}>
@@ -52,8 +32,9 @@ export const PointInfo = memo((props: PointsInfoProps) => {
           {showMoreInfo ? minimizeChar : expandChar}
         </button>
       </div>
-      {showMoreInfo
-        && extraPointInfo}
+      {showMoreInfo && <PointDetailsSection point={point} />}
     </div>
   );
 });
+
+PointInfo.displayName = 'PointInfo';

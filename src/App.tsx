@@ -94,7 +94,7 @@ export default function App() {
   const location = useLocation();
   const pointCount = parseInt(query.get('point_count') || '0', 10) || 25000;
   const dataSet = query.get('data_set') || dataSets[Object.keys(dataSets)[0]];
-  const selection = (query.get('selection') || '').split(',') || [];
+  const selection = useMemo(() => (query.get('selection') || '').split(',') || [], [query]);
   const { width, height } = useWindowSize();
 
   const [redditData, setRedditData] = React.useState<Point[]>([]);
@@ -210,10 +210,10 @@ export default function App() {
     }
   };
 
-  const search = (term: string) => {
+  const search = (term: string, isMultiSelect?: boolean) => {
     redditData.forEach((point) => {
       if (point.include && point.subreddit.toLowerCase() === cleanTerm(term)) {
-        selectOrDeselectPoint(point.id, multiSelect);
+        selectOrDeselectPoint(point.id, isMultiSelect || multiSelect);
       }
     });
   };
@@ -262,7 +262,7 @@ export default function App() {
     }
   };
 
-  const resolutionScales = useMemo(() => range(0.5, window.devicePixelRatio, 0.5), [window.devicePixelRatio]);
+  const resolutionScales = range(0.5, window.devicePixelRatio, 0.5);
 
   const resolutionOptions = useMemo(() => resolutionScales.map((scaleFactor, index) => {
     const suffix = `${scaleFactor * width}x${scaleFactor * height} ${index === resolutionScales.length - 1
@@ -276,7 +276,7 @@ export default function App() {
         {`${scaleFactor}x -- ${suffix}`}
       </option>
     );
-  }), [width, height]);
+  }), [resolutionScales, width, height]);
 
   return (
     <div className="App">
@@ -334,7 +334,7 @@ export default function App() {
                 <DataList
                   values={dataList.filter(((value) => value.toLowerCase().includes(cleanTerm(searchTerm))))}
                   id="subreddits"
-                  onSelect={(value) => search(value)}
+                  onSelect={(value, isMultiSelect) => search(value, isMultiSelect)}
                   onChange={(value) => setSearchTerm(value)}
                 />
                 <button type="button" onClick={() => search(searchTerm)}>Search</button>
@@ -564,3 +564,5 @@ export default function App() {
     </div>
   );
 }
+
+App.displayName = 'App';

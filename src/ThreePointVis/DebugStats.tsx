@@ -39,3 +39,5 @@ export const DebugStats = (props: DebugStatsProps) => {
     </>
   );
 };
+
+DebugStats.displayName = 'DebugStats';
