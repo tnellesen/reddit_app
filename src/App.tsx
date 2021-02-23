@@ -236,8 +236,8 @@ export default function App() {
   const handleClick = (event: React.PointerEvent<HTMLDivElement>) => {
     const { clientX, clientY } = event;
     const downDistance = Math.sqrt(
-      mouseDownRef.current[0] - clientX ** 2
-      + mouseDownRef.current[1] - clientY ** 2,
+      (mouseDownRef.current[0] - clientX) ** 2
+      + (mouseDownRef.current[1] - clientY) ** 2
     );
 
     // skip click if we dragged more than 5px distance
