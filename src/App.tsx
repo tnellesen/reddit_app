@@ -35,7 +35,7 @@ import {
   POINT_RADIUS,
 } from './constants';
 import { LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
-import { range } from './util';
+import { formatNumber, range } from './util';
 import { useWindowSize } from './ViewportHooks';
 
 export interface Point {
@@ -237,11 +237,11 @@ export default function App() {
     const { clientX, clientY } = event;
     const downDistance = Math.sqrt(
       (mouseDownRef.current[0] - clientX) ** 2
-      + (mouseDownRef.current[1] - clientY) ** 2
+      + (mouseDownRef.current[1] - clientY) ** 2,
     );
 
     // skip click if we dragged more than 5px distance
-    if (downDistance > 5) {
+    if (downDistance > 7) {
       event.stopPropagation();
       return;
     }
@@ -366,26 +366,6 @@ export default function App() {
               />
               <br />
               <br />
-              <label htmlFor="nsfwSlider">
-                {' '}
-                Max % NSFW Threads:
-                {' '}
-                {maxPercentNSFW}
-              </label>
-              <input
-                id="nsfwSlider"
-                type="range"
-                min={0}
-                max={100}
-                step={0.1}
-                value={maxPercentNSFW}
-                onChange={(event) => {
-                  setMaxPercentNSFW(+event.target.value);
-                  selectedPoints.filter((point) => point.percentNsfw < +event.target.value);
-                  setParam('selection', selectedPoints.map((p) => p.subreddit).join(','));
-                  // }
-                }}
-              />
               <div>
                 <label htmlFor="pointCount"># Points: </label>
                 <select
@@ -424,6 +404,27 @@ export default function App() {
                   {Object.keys(dataSets).map((ds) => <option value={ds} key={ds}>{ds}</option>)}
                 </select>
               </div>
+              <label htmlFor="nsfwSlider">
+                {' '}
+                Max NSFW:
+                {' '}
+                {maxPercentNSFW}
+                % &nbsp;
+              </label>
+              <input
+                id="nsfwSlider"
+                type="range"
+                min={0}
+                max={100}
+                step={0.1}
+                value={maxPercentNSFW}
+                onChange={(event) => {
+                  setMaxPercentNSFW(+event.target.value);
+                  selectedPoints.filter((point) => point.percentNsfw < +event.target.value);
+                  setParam('selection', selectedPoints.map((p) => p.subreddit).join(','));
+                }}
+              />
+              <br />
               <br />
               <label htmlFor="showClusterHulls">
                 Show Cluster Hulls:
@@ -487,7 +488,7 @@ export default function App() {
                 {' '}
                 View Distance:
                 {' '}
-                {viewDistance}
+                {formatNumber(viewDistance, 2)}
               </label>
               <input
                 id="viewDistance"

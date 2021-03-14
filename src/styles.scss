@@ -58,12 +58,22 @@ h4 {
     overflow: auto;
     border: grey 1px solid;
 
+    label {
+      min-width: 6rem;
+      display: inline-block;
+    }
+
+    .performance-panel {
+      label {
+        min-width: 10rem;
+      }
+    }
+
     .controls-title-bar,
     .advanced-settings-title-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0, 0, 0, 0.9);
       .title {
         display: inline;
       }
