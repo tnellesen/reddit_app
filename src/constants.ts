@@ -19,9 +19,8 @@ export const expandChar = '+';
 export type dataSetList = {[name: string]: string};
 
 export const dataSets: dataSetList = {
-  Latest: 'new_2.0',
+  Default: 'new_2.0',
   Testing: 'new_4.0',
-  Legacy: 'original',
 };
 
 // Threshold for auto disabling expensive graphical effects
