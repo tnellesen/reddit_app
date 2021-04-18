@@ -112,6 +112,7 @@ export default function App() {
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio / 2));
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [hideUserAccounts, setHideUserAccounts] = React.useState(false);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
   const [debugVoxels, setDebugVoxels] = React.useState(false);
@@ -136,9 +137,9 @@ export default function App() {
       z: point.z,
       cluster: point.cluster[clusterIndex],
       percentNsfw: point.percentNsfw,
-      include: point.percentNsfw <= maxPercentNSFW,
+      include: point.percentNsfw <= maxPercentNSFW && !(hideUserAccounts && point.subreddit.startsWith('u_')),
     }))
-    : []), [clusterIndex, data, maxPercentNSFW]);
+    : []), [clusterIndex, data, hideUserAccounts, maxPercentNSFW]);
 
   const selectedPoints = useMemo(() => redditData.filter((point) => selection.includes(point.subreddit)).sort((a, b) =>
     a.subreddit.toLowerCase().localeCompare(b.subreddit.toLowerCase())),
@@ -405,6 +406,15 @@ export default function App() {
                 onChange={(event) => {
                   setMaxPercentNSFW(+event.target.value);
                 }}
+              />
+              <label htmlFor="hideUserAccounts">
+                Hide User Accounts:
+              </label>
+              <input
+                id="hideUserAccounts"
+                type="checkbox"
+                checked={hideUserAccounts}
+                onChange={(event) => setHideUserAccounts(event.target.checked)}
               />
               <br />
               <br />
