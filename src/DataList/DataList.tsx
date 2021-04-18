@@ -181,7 +181,7 @@ export const DataList = memo((props: DataListProps) => {
           <List
             ref={listRef}
             width="100%"
-            height={190}
+            height={itemHeight * 6}
             key={id}
             style={{ position: 'absolute' }}
             itemCount={values.length}

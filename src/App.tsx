@@ -4,7 +4,7 @@ import './styles.scss';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import * as THREE from 'three';
 import {
-  BoxBufferGeometry, Group, Mesh, MeshBasicMaterial, Object3D, Sphere, Vector3,
+  BoxBufferGeometry, Group, Mesh, MeshBasicMaterial, MOUSE, Object3D, Sphere, Vector3,
 } from 'three';
 import useAxios from 'axios-hooks';
 import { Camera, Canvas } from 'react-three-fiber';
@@ -76,7 +76,7 @@ const getMesh = (group: Group | Object3D): Mesh => {
   return new Mesh(geometry, material);
 };
 
-export const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000];
+export const pointCounts = [10000, 25000, 50000, 100000, 250000];
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -88,6 +88,8 @@ const setQueryParam = (key: string, value: string, history: History, location: L
   history.push({ search: qs.stringify(newQueries) });
 };
 
+const MAX_DATA_CACHE_AGE_SECONDS = 432000; // 5 days
+
 export default function App() {
   const query = useQuery();
   const history = useHistory();
@@ -97,9 +99,6 @@ export default function App() {
   const selection = useMemo(() => (query.get('selection') || '').split(',') || [], [query]);
   const { width, height } = useWindowSize();
 
-  const [redditData, setRedditData] = React.useState<Point[]>([]);
-  const [clusters, setClusters] = React.useState<Cluster[]>([]);
-  const [clusterCounts, setClusterCounts] = React.useState<number[]>([]);
   const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
   const [searchTerm, setSearchTerm] = React.useState('');
   const [showControls, setShowControls] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
@@ -113,6 +112,7 @@ export default function App() {
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio / 2));
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [hideUserAccounts, setHideUserAccounts] = React.useState(false);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
   const [debugVoxels, setDebugVoxels] = React.useState(false);
@@ -120,66 +120,47 @@ export default function App() {
     Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE),
   );
   const [camera, setCamera] = React.useState<Camera>();
-  const [dataList, setDataList] = React.useState<string[]>([]);
 
-  const selectedPoints = useMemo(() => redditData.filter((point) => selection.includes(point.subreddit)),
-    [selection, redditData]);
-
-  const [{ data, loading, error }] = useAxios(
-    `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`,
-  );
+  const [{ data, loading, error }] = useAxios({
+    url: `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`,
+    headers: { 'Cache-Control': `max-age=${MAX_DATA_CACHE_AGE_SECONDS}`, pragma: '' },
+  });
 
   const setParam = (key: string, value: string) => setQueryParam(key, value, history, location);
 
-  React.useEffect(() => {
-    const newRedditData: Point[] = data
-      ? data.data.map((point: any, index: number) => ({
-        id: index,
-        subreddit: point.subreddit,
-        x: point.x,
-        y: point.y,
-        z: point.z,
-        cluster: point.cluster[clusterIndex],
-        percentNsfw: point.percentNsfw,
-        include: point.percentNsfw <= maxPercentNSFW,
-      }))
-      : [];
+  const redditData: Point[] = useMemo(() => (data
+    ? data.data.map((point: any, index: number) => ({
+      id: index,
+      subreddit: point.subreddit,
+      x: point.x,
+      y: point.y,
+      z: point.z,
+      cluster: point.cluster[clusterIndex],
+      percentNsfw: point.percentNsfw,
+      include: point.percentNsfw <= maxPercentNSFW && !(hideUserAccounts && point.subreddit.startsWith('u_')),
+    }))
+    : []), [clusterIndex, data, hideUserAccounts, maxPercentNSFW]);
 
-    const newClusterCounts = data ? data.clusterCounts : [];
-    const clusterCount = newClusterCounts[clusterIndex];
+  const selectedPoints = useMemo(() => redditData.filter((point) => selection.includes(point.subreddit)).sort((a, b) =>
+    a.subreddit.toLowerCase().localeCompare(b.subreddit.toLowerCase())),
+  [selection, redditData]);
 
-    const newClusters = data
-      ? data.clusters[clusterCount].map(
-        (cluster: any): Cluster => ({
-          id: cluster.id,
-          obj: getMesh(loader.parse(cluster.obj)),
-        }),
-      )
-      : [];
+  const clusterCounts: number[] = useMemo(() => (data ? data.clusterCounts : []), [data]);
+  const clusterCount = useMemo(() => clusterCounts[clusterIndex], [clusterCounts, clusterIndex]);
 
-    if (newRedditData && newRedditData.length) {
-      setRedditData(newRedditData);
-      setDataList(newRedditData.filter((point) => point.include).map((point) => point.subreddit));
-    }
-    if (newClusters && newClusters.length) {
-      setClusters(newClusters);
-    }
-    setClusterCounts(newClusterCounts);
-  }, [maxPercentNSFW, data, clusterIndex]);
+  const clusters = useMemo(() => (data
+    ? data.clusters[clusterCount].map(
+      (cluster: any): Cluster => ({
+        id: cluster.id,
+        obj: getMesh(loader.parse(cluster.obj)),
+      }),
+    )
+    : []), [clusterCount, data]);
 
-  React.useEffect(() => {
-    const clusterCount = clusterCounts[clusterIndex];
-
-    const newClusters = data && clusterCount
-      ? data.clusters[clusterCount].map(
-        (cluster: any): Cluster => ({
-          id: cluster.id,
-          obj: getMesh(loader.parse(cluster.obj)),
-        }),
-      )
-      : [];
-    setClusters(newClusters);
-  }, [clusterIndex, clusterCounts, data]);
+  const dataList = useMemo(() =>
+    redditData.filter((point) => point.include).map((point) => point.subreddit).sort((a, b) =>
+      a.toLowerCase().localeCompare(b.toLowerCase())),
+  [redditData]);
 
   React.useEffect(() => {
     setVoxelResolution(getAutoVoxelResolution(pointCount));
@@ -229,35 +210,39 @@ export default function App() {
     }), [redditData]);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    mouseDownRef.current[0] = event.clientX;
-    mouseDownRef.current[1] = event.clientY;
+    if (event.button === MOUSE.LEFT) {
+      mouseDownRef.current[0] = event.clientX;
+      mouseDownRef.current[1] = event.clientY;
+    }
   };
 
   const handleClick = (event: React.PointerEvent<HTMLDivElement>) => {
-    const { clientX, clientY } = event;
-    const downDistance = Math.sqrt(
-      (mouseDownRef.current[0] - clientX) ** 2
-      + (mouseDownRef.current[1] - clientY) ** 2,
-    );
+    if (event.button === MOUSE.LEFT) {
+      const { clientX, clientY } = event;
+      const downDistance = Math.sqrt(
+        (mouseDownRef.current[0] - clientX) ** 2
+        + (mouseDownRef.current[1] - clientY) ** 2,
+      );
 
-    // skip click if we dragged more than 5px distance
-    if (downDistance > 7) {
-      event.stopPropagation();
-      return;
-    }
-    if (camera) {
-      const mouse = {
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -(event.clientY / window.innerHeight) * 2 + 1,
-      };
+      // skip click if we dragged more than 5px distance
+      if (downDistance > 7) {
+        event.stopPropagation();
+        return;
+      }
+      if (camera) {
+        const mouse = {
+          x: (event.clientX / window.innerWidth) * 2 - 1,
+          y: -(event.clientY / window.innerHeight) * 2 + 1,
+        };
 
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(collisionGeometry);
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(collisionGeometry);
 
-      if (intersects.length > 0) {
-        const intersected = intersects[0].object as CollisionSphere;
-        const clickedId = intersected.index;
-        selectOrDeselectPoint(clickedId, multiSelect || event.ctrlKey);
+        if (intersects.length > 0) {
+          const intersected = intersects[0].object as CollisionSphere;
+          const clickedId = intersected.index;
+          selectOrDeselectPoint(clickedId, multiSelect || event.ctrlKey);
+        }
       }
     }
   };
@@ -389,7 +374,7 @@ export default function App() {
                   value={clusterCounts[clusterIndex]}
                 >
                   {clusterCounts.map(
-                    (clusterCount) => <option value={clusterCount} key={clusterCount}>{clusterCount}</option>,
+                    (count) => <option value={count} key={count}>{count}</option>,
                   )}
                 </select>
               </div>
@@ -420,9 +405,16 @@ export default function App() {
                 value={maxPercentNSFW}
                 onChange={(event) => {
                   setMaxPercentNSFW(+event.target.value);
-                  selectedPoints.filter((point) => point.percentNsfw < +event.target.value);
-                  setParam('selection', selectedPoints.map((p) => p.subreddit).join(','));
                 }}
+              />
+              <label htmlFor="hideUserAccounts">
+                Hide User Accounts:
+              </label>
+              <input
+                id="hideUserAccounts"
+                type="checkbox"
+                checked={hideUserAccounts}
+                onChange={(event) => setHideUserAccounts(event.target.checked)}
               />
               <br />
               <br />
