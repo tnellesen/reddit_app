@@ -35,7 +35,7 @@ import {
   POINT_RADIUS,
 } from './constants';
 import { LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
-import { formatNumber, range } from './util';
+import { formatNumber, range, useLocalStorage } from './util';
 import { useWindowSize } from './ViewportHooks';
 
 export interface Point {
@@ -52,6 +52,12 @@ export interface Point {
 export interface Cluster {
   id: number;
   obj: Mesh;
+}
+
+enum ControlTabs {
+  'EXPLORE',
+  'PERFORMANCE',
+  'ABOUT'
 }
 
 const loader = new OBJLoader();
@@ -120,6 +126,8 @@ export default function App() {
     Math.min(window.innerWidth * window.innerHeight * CLIP_SCALE_FACTOR, MAX_VIEW_DISTANCE),
   );
   const [camera, setCamera] = React.useState<Camera>();
+  const [hasReadAboutPage, setHasReadAboutPage] = useLocalStorage<string>('hasReadAboutPage', '');
+  const [tabIndex, setTabIndex] = React.useState(hasReadAboutPage ? ControlTabs.EXPLORE : ControlTabs.ABOUT);
 
   const [{ data, loading, error }] = useAxios({
     url: `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`,
@@ -307,7 +315,7 @@ export default function App() {
           </button>
         </div>
         {showControls && (
-          <Tabs>
+          <Tabs selectedIndex={tabIndex} onSelect={(index) => setTabIndex(index)}>
             <TabList>
               <Tab>Explore</Tab>
               <Tab>Performance</Tab>
@@ -547,6 +555,44 @@ export default function App() {
             </TabPanel>
 
             <TabPanel className="tab-panel about-panel">
+              <p>Welcome to Reddit Explorer, your map to The Front Page of The Internet!</p>
+              <p>
+                Click or tap on some points to begin exploring, or search by name and view bigger data sets in the
+                {' '}
+                <button type="button" onClick={() => setTabIndex(ControlTabs.EXPLORE)}>Explore</button>
+                {' '}
+                tab.
+              </p>
+              <p>
+                You can use Reddit Explorer to find new communities and topics similar to your current interests or
+                just to see how different interests overlap across the internet.
+                The top communities of Reddit are shown arranged by overlapping user interests.
+                For more information, see TODO-insert Github or other links here.
+              </p>
+              <p>
+                If the app
+                is running slow, or if you have a more powerful device and want a prettier experience,
+                you can experiment in the
+                {' '}
+                <button type="button" onClick={() => setTabIndex(ControlTabs.PERFORMANCE)}>Performance</button>
+                {' '}
+                tab.
+              </p>
+              <p>Have fun exploring!</p>
+              {!hasReadAboutPage
+                && (
+                <button
+                  type="button"
+                  className="acknowledge-about-button"
+                  onClick={() => {
+                    setHasReadAboutPage('true');
+                    setTabIndex(ControlTabs.EXPLORE);
+                  }}
+                >
+                  Got it!
+                </button>
+                ) }
+              <br />
               <h4>Created By:</h4>
               <div>Data Science: Tyler Nellesen</div>
               <div>Application: John Morone</div>
