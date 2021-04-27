@@ -593,6 +593,7 @@ export default function App() {
                 </button>
                 ) }
               <br />
+              <br />
               <h4>Created By:</h4>
               <div>Data Science: Tyler Nellesen</div>
               <div>Application: John Morone</div>
