@@ -581,18 +581,20 @@ export default function App() {
               <p>Have fun exploring!</p>
               {!hasReadAboutPage
                 && (
-                <button
-                  type="button"
-                  className="acknowledge-about-button"
-                  onClick={() => {
-                    setHasReadAboutPage('true');
-                    setTabIndex(ControlTabs.EXPLORE);
-                  }}
-                >
-                  Got it!
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="acknowledge-about-button"
+                    onClick={() => {
+                      setHasReadAboutPage('true');
+                      setTabIndex(ControlTabs.EXPLORE);
+                    }}
+                  >
+                    Got it!
+                  </button>
+                  <br />
+                </>
                 ) }
-              <br />
               <br />
               <h4>Created By:</h4>
               <div>Data Science: Tyler Nellesen</div>

@@ -71,6 +71,9 @@ h4 {
     }
 
     .about-panel {
+      p:first-of-type {
+        margin-top: 0;
+      }
       .acknowledge-about-button {
         display: block;
         margin-left: auto;
