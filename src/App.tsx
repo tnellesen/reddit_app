@@ -97,6 +97,7 @@ const setQueryParam = (key: string, value: string, history: History, location: L
 const MAX_DATA_CACHE_AGE_SECONDS = 432000; // 5 days
 
 export default function App() {
+  const isMobile = window.innerWidth > MOBILE_THRESHOLD_WIDTH;
   const query = useQuery();
   const history = useHistory();
   const location = useLocation();
@@ -113,10 +114,10 @@ export default function App() {
     Math.floor(Math.max(Math.min(4 + window.innerWidth / 320, MAX_POINT_RES * 0.75), 1)),
   );
   const [maxPercentNSFW, setMaxPercentNSFW] = React.useState(10);
-  const [usePostProcessing, setUsePostProcessing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
-  const [useAntiAliasing, setUseAntiAliasing] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [usePostProcessing, setUsePostProcessing] = React.useState(isMobile);
+  const [useAntiAliasing, setUseAntiAliasing] = React.useState(isMobile);
   const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio / 2));
-  const [usePerPointLighting, setUsePerPointLighting] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
+  const [usePerPointLighting, setUsePerPointLighting] = React.useState(isMobile);
   const [hideUserAccounts, setHideUserAccounts] = React.useState(false);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
@@ -126,7 +127,7 @@ export default function App() {
   );
   const [camera, setCamera] = React.useState<Camera>();
   const [hasReadAboutPage, setHasReadAboutPage] = useLocalStorage<string>('hasReadAboutPage', '');
-  const [showControls, setShowControls] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH || !hasReadAboutPage);
+  const [showControls, setShowControls] = React.useState(isMobile || !hasReadAboutPage);
   const [tabIndex, setTabIndex] = React.useState(hasReadAboutPage ? ControlTabs.EXPLORE : ControlTabs.ABOUT);
 
   const [{ data, loading, error }] = useAxios({
