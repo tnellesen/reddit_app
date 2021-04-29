@@ -107,7 +107,6 @@ export default function App() {
 
   const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [showControls, setShowControls] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH);
   const [showAdvancedControls, setShowAdvancedControls] = React.useState(false);
   const [multiSelect, setMultiSelect] = React.useState(false);
   const [pointResolution, setPointResolution] = React.useState(
@@ -127,6 +126,7 @@ export default function App() {
   );
   const [camera, setCamera] = React.useState<Camera>();
   const [hasReadAboutPage, setHasReadAboutPage] = useLocalStorage<string>('hasReadAboutPage', '');
+  const [showControls, setShowControls] = React.useState(window.innerWidth > MOBILE_THRESHOLD_WIDTH || !hasReadAboutPage);
   const [tabIndex, setTabIndex] = React.useState(hasReadAboutPage ? ControlTabs.EXPLORE : ControlTabs.ABOUT);
 
   const [{ data, loading, error }] = useAxios({
