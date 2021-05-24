@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { useMemo } from 'react';
 import './styles.scss';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import * as THREE from 'three';
 import {
-  BoxBufferGeometry, Group, Mesh, MeshBasicMaterial, MOUSE, Object3D, Sphere, Vector3,
+  Mesh, MOUSE, Sphere, Vector3,
 } from 'three';
 import useAxios from 'axios-hooks';
 import { Camera, Canvas } from 'react-three-fiber';
@@ -24,7 +23,7 @@ import {
   CLIP_SCALE_FACTOR,
   dataSetList,
   dataSets,
-  expandChar,
+  expandChar, MAX_DATA_CACHE_AGE_SECONDS,
   MAX_POINT_RES,
   MAX_VIEW_DISTANCE,
   MAX_VOXEL_RES,
@@ -37,6 +36,7 @@ import {
 import { LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
 import { formatNumber, range, useLocalStorage } from './util';
 import { useWindowSize } from './ViewportHooks';
+import { ClusterHulls } from './ThreePointVis/ClusterHulls';
 
 export interface Point {
   id: number;
@@ -60,27 +60,9 @@ enum ControlTabs {
   'ABOUT'
 }
 
-const loader = new OBJLoader();
-
 const getAutoVoxelResolution = (numberOfPoints: number) => Math.max(MIN_VOXEL_RES,
   Math.min(MAX_VOXEL_RES,
     Math.floor(Math.cbrt(numberOfPoints / 80))));
-
-const getMesh = (group: Group | Object3D): Mesh => {
-  for (let i = 0; i < group.children.length; i++) {
-    const child = group.children[i];
-    if (child instanceof Mesh) {
-      return child;
-    }
-    if (child.children.length) {
-      return getMesh(child);
-    }
-  }
-  // return error mesh
-  const geometry = new BoxBufferGeometry(1, 1, 1);
-  const material = new MeshBasicMaterial({ color: 0xffff00 });
-  return new Mesh(geometry, material);
-};
 
 export const pointCounts = [10000, 25000, 50000, 100000, 250000];
 
@@ -93,8 +75,6 @@ const setQueryParam = (key: string, value: string, history: History, location: L
   const newQueries = { ...queryParams, [key]: value };
   history.push({ search: qs.stringify(newQueries) });
 };
-
-const MAX_DATA_CACHE_AGE_SECONDS = 432000; // 5 days
 
 export default function App() {
   const isMobile = window.innerWidth > MOBILE_THRESHOLD_WIDTH;
@@ -130,15 +110,15 @@ export default function App() {
   const [showControls, setShowControls] = React.useState(isMobile || !hasReadAboutPage);
   const [tabIndex, setTabIndex] = React.useState(hasReadAboutPage ? ControlTabs.EXPLORE : ControlTabs.ABOUT);
 
-  const [{ data, loading, error }] = useAxios({
-    url: `https://redditexplorer.com/GetData/dataset:${dataSet},n_points:${pointCount}`,
+  const [{ data: pointData, loading: pointsLoading, error: pointsError }] = useAxios({
+    url: `https://redditexplorer.com/GetPoints/dataset:${dataSet},n_points:${pointCount}`,
     headers: { 'Cache-Control': `max-age=${MAX_DATA_CACHE_AGE_SECONDS}`, pragma: '' },
   });
 
   const setParam = (key: string, value: string) => setQueryParam(key, value, history, location);
 
-  const redditData: Point[] = useMemo(() => (data
-    ? data.data.map((point: any, index: number) => ({
+  const redditData: Point[] = useMemo(() => (pointData
+    ? pointData.data.map((point: any, index: number) => ({
       id: index,
       subreddit: point.subreddit,
       x: point.x,
@@ -148,23 +128,20 @@ export default function App() {
       percentNsfw: point.percentNsfw,
       include: point.percentNsfw <= maxPercentNSFW && !(hideUserAccounts && point.subreddit.startsWith('u_')),
     }))
-    : []), [clusterIndex, data, hideUserAccounts, maxPercentNSFW]);
+    : []), [clusterIndex, pointData, hideUserAccounts, maxPercentNSFW]);
 
   const selectedPoints = useMemo(() => redditData.filter((point) => selection.includes(point.subreddit)).sort((a, b) =>
     a.subreddit.toLowerCase().localeCompare(b.subreddit.toLowerCase())),
   [selection, redditData]);
 
-  const clusterCounts: number[] = useMemo(() => (data ? data.clusterCounts : []), [data]);
+  const clusterCounts: number[] = useMemo(() => (pointData ? pointData.clusterCounts : []), [pointData]);
   const clusterCount = useMemo(() => clusterCounts[clusterIndex], [clusterCounts, clusterIndex]);
-
-  const clusters = useMemo(() => (data
-    ? data.clusters[clusterCount].map(
-      (cluster: any): Cluster => ({
-        id: cluster.id,
-        obj: getMesh(loader.parse(cluster.obj)),
-      }),
-    )
-    : []), [clusterCount, data]);
+  const clusters = useMemo(
+    () => (showClusterHulls
+      ? <ClusterHulls dataSet={dataSet} pointCount={pointCount} clusterCount={clusterCount} />
+      : null),
+    [clusterCount, dataSet, pointCount, showClusterHulls],
+  );
 
   const dataList = useMemo(() =>
     redditData.filter((point) => point.include).map((point) => point.subreddit).sort((a, b) =>
@@ -274,9 +251,9 @@ export default function App() {
 
   return (
     <div className="App">
-      {loading && <LoadingOverlay message="Loading dollops of dope data" />}
-      {error && <span className="error-message">{error.message}</span>}
-      {!loading && !error && redditData && redditData.length && (
+      {pointsLoading && <LoadingOverlay message="Loading dollops of dope data" />}
+      {pointsError && <span className="error-message">{pointsError.message}</span>}
+      {!pointsLoading && !pointsError && redditData && redditData.length && (
       <div className="vis-container" key={`${redditData.length} ${resolutionScale}`}>
         <Canvas
           concurrent
@@ -292,7 +269,7 @@ export default function App() {
                 && <Effects useAA={useAntiAliasing} useUnrealBloom={usePostProcessing} />}
           <ThreePointVis
             data={redditData}
-            clusters={showClusterHulls ? clusters : []}
+            clusters={clusters}
             selectedPoints={selectedPoints}
             onSelect={selectOrDeselectPoint}
             pointResolution={pointResolution}
@@ -333,7 +310,7 @@ export default function App() {
                 />
                 <button type="button" onClick={() => search(searchTerm)}>Search</button>
               </div>
-              {!loading && data && selectedPoints.length !== 0 && (
+              {!pointsLoading && pointData && selectedPoints.length !== 0 && (
                 <>
                   <div className="selection-header">
                     <h3>Selection</h3>
