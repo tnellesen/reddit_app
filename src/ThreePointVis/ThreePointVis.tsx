@@ -5,10 +5,10 @@ import { Color, Vector3 } from 'three';
 import { Controls } from './Controls';
 import { InstancedPoints } from './InstancedPoints';
 import { Text, Position } from './Text';
-import { Cluster, Point } from '../App';
+import { Point } from '../App';
 import { useWindowSize } from '../ViewportHooks';
 import { VoxelInstancedPoints } from './VoxelInstancedPoints';
-import { ClusterHulls } from './ClusterHulls';
+import { ClusterHullsProps } from './ClusterHulls';
 import {
   MAX_POINT_RES, MOBILE_THRESHOLD_WIDTH, POINT_RADIUS, SCALE_FACTOR, SELECTED_COLOR,
 } from '../constants';
@@ -20,7 +20,7 @@ export type SelectHandler = (
 
 interface ThreePointVisProps {
   data: Point[];
-  clusters: Cluster[];
+  clusters: React.ReactElement<ClusterHullsProps> | null;
   selectedPoints: SelectedPoints;
   onSelect: SelectHandler;
   pointResolution: number;
@@ -119,7 +119,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
         groundColor={new THREE.Color('#080808')}
         intensity={1.0}
       />
-      {clusters && <ClusterHulls clusters={clusters} />}
+      {clusters}
       {voxelResolution <= 1
         ? (
           <InstancedPoints

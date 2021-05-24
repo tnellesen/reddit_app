@@ -11,6 +11,8 @@ export const MAX_VOXEL_RES = 12;
 export const MIN_VIEW_DISTANCE = 100;
 export const MAX_VIEW_DISTANCE = 20000;
 
+export const MAX_DATA_CACHE_AGE_SECONDS = 432000; // 5 days
+
 export const SELECTED_COLOR = '#5E5';
 
 export const minimizeChar = '⁠–⁠';
@@ -21,6 +23,7 @@ export type dataSetList = {[name: string]: string};
 export const dataSets: dataSetList = {
   Default: 'new_2.0',
   Testing: 'new_4.0',
+  SuperExperimental: 'new_p2.0_q2.0',
 };
 
 // Threshold for auto disabling expensive graphical effects
