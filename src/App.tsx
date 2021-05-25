@@ -64,7 +64,7 @@ const getAutoVoxelResolution = (numberOfPoints: number) => Math.max(MIN_VOXEL_RE
   Math.min(MAX_VOXEL_RES,
     Math.floor(Math.cbrt(numberOfPoints / 80))));
 
-export const pointCounts = [10000, 25000, 50000, 100000, 250000];
+const pointCounts = [10000, 25000, 50000, 100000, 250000, 500000];
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
