@@ -159,19 +159,19 @@ export default function App() {
     }
   }, [viewDistance, camera]);
 
-  const selectOrDeselectPoint = (index: number, isMultiSelect: boolean) => {
+  const selectOrDeselectPoint = (id: number, isMultiSelect: boolean) => {
     const selectedIds = selectedPoints.map((point) => point.id);
     if (isMultiSelect) {
-      if (!selectedIds.includes(index)) {
+      if (!selectedIds.includes(id)) {
         const newSelection = [...selection];
-        newSelection.push(redditData[index].subreddit);
+        newSelection.push(redditData[id].subreddit);
         setParam('selection', newSelection.join(','));
       } else {
-        const newSelectedPoints = [...selectedPoints].filter((point) => point.id !== index);
+        const newSelectedPoints = [...selectedPoints].filter((point) => point.id !== id);
         setParam('selection', newSelectedPoints.map((p) => p.subreddit).join(','));
       }
-    } else if (selectedIds.length !== 1 || selectedIds[0] !== index) {
-      setParam('selection', redditData[index].subreddit);
+    } else if (selectedIds.length !== 1 || selectedIds[0] !== id) {
+      setParam('selection', redditData[id].subreddit);
     } else {
       setParam('selection', '');
     }
@@ -322,7 +322,13 @@ export default function App() {
                     </button>
                   </div>
                   <div className="selected-points-info">
-                    {selectedPoints.map((point) => <PointInfo key={point.id} point={point} />)}
+                    {selectedPoints.map((point) => (
+                      <PointInfo
+                        key={point.id}
+                        point={point}
+                        onDeselect={() => selectOrDeselectPoint(point.id, true)}
+                      />
+                    ))}
                   </div>
                 </>
               )}
