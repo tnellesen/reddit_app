@@ -27,12 +27,13 @@ interface ThreePointVisProps {
   voxelResolution: number;
   debugVoxels?: boolean;
   usePerPointLighting?: boolean;
+  isAutoCamera?: boolean;
 }
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
   const {
     data, selectedPoints, clusters, onSelect, pointResolution,
-    voxelResolution, debugVoxels, usePerPointLighting,
+    voxelResolution, debugVoxels, usePerPointLighting, isAutoCamera,
   } = props;
 
   const selectedPointVectors = selectedPoints.map((point) => new Vector3(point.x, point.y, point.z));
@@ -111,7 +112,12 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
 
   return (
     <>
-      <Controls target={cameraTarget} position={cameraPosition} distance={selectedBoundingSphere.radius} />
+      <Controls
+        target={cameraTarget}
+        position={cameraPosition}
+        distance={selectedBoundingSphere.radius}
+        autoTarget={isAutoCamera}
+      />
       <ambientLight color="#ffffff" intensity={0.1} />
       <hemisphereLight
         color="#ffffff"

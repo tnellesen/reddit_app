@@ -100,6 +100,7 @@ export default function App() {
   const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio / 2));
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(isMobile);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
+  const [isAutoCamera, setIsAutoCamera] = React.useState(true);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
   const [debugVoxels, setDebugVoxels] = React.useState(false);
   const [viewDistance, setViewDistance] = React.useState(
@@ -276,6 +277,7 @@ export default function App() {
             voxelResolution={voxelResolution}
             debugVoxels={debugVoxels}
             usePerPointLighting={usePerPointLighting}
+            isAutoCamera={isAutoCamera}
           />
           )
         </Canvas>
@@ -418,6 +420,16 @@ export default function App() {
                 type="checkbox"
                 checked={showClusterHulls}
                 onChange={(event) => setShowClusterHulls(event.target.checked)}
+              />
+              <br />
+              <label htmlFor="isAutoCamera">
+                Auto Camera:
+              </label>
+              <input
+                id="isAutoCamera"
+                type="checkbox"
+                checked={isAutoCamera}
+                onChange={(event) => setIsAutoCamera(event.target.checked)}
               />
             </TabPanel>
 
