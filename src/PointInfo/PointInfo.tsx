@@ -8,10 +8,11 @@ import './PointInfo.scss';
 
 interface PointsInfoProps {
   point: Point;
+  onDeselect: () => void;
 }
 
 export const PointInfo = memo((props: PointsInfoProps) => {
-  const { point } = props;
+  const { point, onDeselect } = props;
   const [showMoreInfo, setShowMoreInfo] = React.useState(false);
 
   return (
@@ -24,13 +25,22 @@ export const PointInfo = memo((props: PointsInfoProps) => {
         >
           <strong>{point.subreddit}</strong>
         </a>
-        <button
-          type="button"
-          className="toggle-info-button"
-          onClick={() => setShowMoreInfo(!showMoreInfo)}
-        >
-          {showMoreInfo ? minimizeChar : expandChar}
-        </button>
+        <div className="action-buttons">
+          <button
+            type="button"
+            className="toggle-info-button"
+            onClick={() => setShowMoreInfo(!showMoreInfo)}
+          >
+            {showMoreInfo ? minimizeChar : expandChar}
+          </button>
+          <button
+            type="button"
+            className="deselect-button"
+            onClick={() => onDeselect()}
+          >
+            x
+          </button>
+        </div>
       </div>
       {showMoreInfo && <PointDetailsSection point={point} />}
     </div>

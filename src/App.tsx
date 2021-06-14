@@ -84,6 +84,7 @@ export default function App() {
   const pointCount = parseInt(query.get('point_count') || '0', 10) || 25000;
   const dataSet = query.get('data_set') || dataSets[Object.keys(dataSets)[0]];
   const selection = useMemo(() => (query.get('selection') || '').split(',') || [], [query]);
+  const hideUserAccounts = query.get('hideUserAccounts') === 'true';
   const { width, height } = useWindowSize();
 
   const [clusterIndex, setClusterIndex] = React.useState<number>(3); // TODO remove hard coding
@@ -98,8 +99,8 @@ export default function App() {
   const [useAntiAliasing, setUseAntiAliasing] = React.useState(isMobile);
   const [resolutionScale, setResolutionScale] = React.useState(Math.ceil(window.devicePixelRatio / 2));
   const [usePerPointLighting, setUsePerPointLighting] = React.useState(isMobile);
-  const [hideUserAccounts, setHideUserAccounts] = React.useState(false);
   const [showClusterHulls, setShowClusterHulls] = React.useState(false);
+  const [isAutoCamera, setIsAutoCamera] = React.useState(true);
   const [voxelResolution, setVoxelResolution] = React.useState(getAutoVoxelResolution(pointCount));
   const [debugVoxels, setDebugVoxels] = React.useState(false);
   const [viewDistance, setViewDistance] = React.useState(
@@ -159,19 +160,19 @@ export default function App() {
     }
   }, [viewDistance, camera]);
 
-  const selectOrDeselectPoint = (index: number, isMultiSelect: boolean) => {
+  const selectOrDeselectPoint = (id: number, isMultiSelect: boolean) => {
     const selectedIds = selectedPoints.map((point) => point.id);
     if (isMultiSelect) {
-      if (!selectedIds.includes(index)) {
+      if (!selectedIds.includes(id)) {
         const newSelection = [...selection];
-        newSelection.push(redditData[index].subreddit);
+        newSelection.push(redditData[id].subreddit);
         setParam('selection', newSelection.join(','));
       } else {
-        const newSelectedPoints = [...selectedPoints].filter((point) => point.id !== index);
+        const newSelectedPoints = [...selectedPoints].filter((point) => point.id !== id);
         setParam('selection', newSelectedPoints.map((p) => p.subreddit).join(','));
       }
-    } else if (selectedIds.length !== 1 || selectedIds[0] !== index) {
-      setParam('selection', redditData[index].subreddit);
+    } else if (selectedIds.length !== 1 || selectedIds[0] !== id) {
+      setParam('selection', redditData[id].subreddit);
     } else {
       setParam('selection', '');
     }
@@ -276,6 +277,7 @@ export default function App() {
             voxelResolution={voxelResolution}
             debugVoxels={debugVoxels}
             usePerPointLighting={usePerPointLighting}
+            isAutoCamera={isAutoCamera}
           />
           )
         </Canvas>
@@ -322,7 +324,13 @@ export default function App() {
                     </button>
                   </div>
                   <div className="selected-points-info">
-                    {selectedPoints.map((point) => <PointInfo key={point.id} point={point} />)}
+                    {selectedPoints.map((point) => (
+                      <PointInfo
+                        key={point.id}
+                        point={point}
+                        onDeselect={() => selectOrDeselectPoint(point.id, true)}
+                      />
+                    ))}
                   </div>
                 </>
               )}
@@ -400,7 +408,7 @@ export default function App() {
                 id="hideUserAccounts"
                 type="checkbox"
                 checked={hideUserAccounts}
-                onChange={(event) => setHideUserAccounts(event.target.checked)}
+                onChange={(event) => setParam('hideUserAccounts', event.target.checked ? 'true' : 'false')}
               />
               <br />
               <br />
@@ -412,6 +420,16 @@ export default function App() {
                 type="checkbox"
                 checked={showClusterHulls}
                 onChange={(event) => setShowClusterHulls(event.target.checked)}
+              />
+              <br />
+              <label htmlFor="isAutoCamera">
+                Auto Camera:
+              </label>
+              <input
+                id="isAutoCamera"
+                type="checkbox"
+                checked={isAutoCamera}
+                onChange={(event) => setIsAutoCamera(event.target.checked)}
               />
             </TabPanel>
 

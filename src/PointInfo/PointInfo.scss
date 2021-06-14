@@ -1,14 +1,27 @@
+@import '../constants.scss';
+
 .point-info {
 
   margin: 0.5em 0;
 
   a {
-    color: rgb(69, 119, 255);
+    color: $accentColor;
   }
 
   .point-header {
     display: flex;
     justify-content: space-between;
+  }
+
+  .toggle-info-button {
+    background: $accentColor;
+    color: white;
+  }
+
+  .deselect-button {
+    background: maroon;
+    color: white;
+    margin-left: 0.25rem;
   }
 }
 

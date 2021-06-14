@@ -9,6 +9,7 @@ interface ControlsProps {
   target: THREE.Vector3 | null;
   position: THREE.Vector3 | null;
   distance: number;
+  autoTarget?: boolean;
 }
 
 extend({ OrbitControls });
@@ -29,7 +30,9 @@ const hasCameraChanged = (prevProps: ControlsProps, nextProps: ControlsProps):
     && prevProps.target.equals(nextProps.target)) || false;
 
 export const Controls = memo((props: ControlsProps) => {
-  const { target, position, distance } = props;
+  const {
+    target, position, distance, autoTarget,
+  } = props;
 
   const cameraDistance = POSITION_THRESHOLD_OFFSET + POSITION_THRESHOLD_SCALER * distance;
 
@@ -39,8 +42,8 @@ export const Controls = memo((props: ControlsProps) => {
 
   const keyPressed: { [key: string]: number } = {};
 
-  let targetAnimationComplete = false;
-  let positionAnimationComplete = false;
+  let targetAnimationComplete = !autoTarget;
+  let positionAnimationComplete = !autoTarget;
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (!keyPressed[event.key]) {

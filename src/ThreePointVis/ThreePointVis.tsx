@@ -27,16 +27,19 @@ interface ThreePointVisProps {
   voxelResolution: number;
   debugVoxels?: boolean;
   usePerPointLighting?: boolean;
+  isAutoCamera?: boolean;
 }
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
   const {
     data, selectedPoints, clusters, onSelect, pointResolution,
-    voxelResolution, debugVoxels, usePerPointLighting,
+    voxelResolution, debugVoxels, usePerPointLighting, isAutoCamera,
   } = props;
 
-  const selectedPointVectors = selectedPoints.map((point) => new Vector3(point.x, point.y, point.z));
-  const selectedBoundingSphere = new THREE.Sphere().setFromPoints(selectedPointVectors);
+  const selectedPointVectors = useMemo(() =>
+    selectedPoints.map((point) => new Vector3(point.x, point.y, point.z)), [selectedPoints]);
+  const selectedBoundingSphere = useMemo(() =>
+    new THREE.Sphere().setFromPoints(selectedPointVectors), [selectedPointVectors]);
   selectedBoundingSphere.radius = Math.max(selectedBoundingSphere.radius, 1);
 
   const cameraTarget = selectedPoints.length > 0
@@ -51,7 +54,7 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
 
   const selectedPointRes = useMemo(() => Math.min(pointResolution * 4, MAX_POINT_RES), [pointResolution]);
 
-  const renderSelectedPoints = selectedPoints.map(
+  const renderSelectedPoints = useMemo(() => selectedPoints.map(
     (point) => (
       <group
         key={point.id}
@@ -106,12 +109,16 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
               )}
       </group>
     ),
-
-  );
+  ), [selectedPointRes, selectedPoints, usePerPointLighting, width]);
 
   return (
     <>
-      <Controls target={cameraTarget} position={cameraPosition} distance={selectedBoundingSphere.radius} />
+      <Controls
+        target={cameraTarget}
+        position={cameraPosition}
+        distance={selectedBoundingSphere.radius}
+        autoTarget={isAutoCamera}
+      />
       <ambientLight color="#ffffff" intensity={0.1} />
       <hemisphereLight
         color="#ffffff"
