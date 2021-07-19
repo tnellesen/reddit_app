@@ -46,10 +46,10 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
   // re-use for instance computations
   const meshRefs = React.useRef<THREE.InstancedMesh[]>([]);
   const colorAttribs = React.useRef<THREE.InstancedBufferAttribute[]>([]);
-  const colorArrays: Float32Array[] = [];
-  for (let i = 0; i < voxels.length; i++) {
-    colorArrays[i] = new Float32Array(voxels[i].length * 3);
-  }
+
+  const colorArrays: Float32Array[] = useMemo(() => voxels.map(
+    (voxel) => new Float32Array(voxel.length * 3),
+  ), [voxels]);
 
   // Sort points into voxel grid when data or grid resolution changes
   React.useEffect(() => {
@@ -82,6 +82,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
   const scratchObject3D = useMemo(() => new Object3D(), []);
   const sharedMaterial = useMemo(() => new MeshLambertMaterial({ vertexColors: true }), []);
 
+  // Set up voxels with appropriate data (only when data changes, not per frame)
   React.useEffect(() => {
     for (let i = 0; i < voxels.length; ++i) {
       const voxel = voxels[i];
