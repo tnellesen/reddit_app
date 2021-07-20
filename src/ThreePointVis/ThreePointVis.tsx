@@ -22,7 +22,6 @@ interface ThreePointVisProps {
   data: Point[];
   clusters: React.ReactElement<ClusterHullsProps> | null;
   selectedPoints: SelectedPoints;
-  onSelect: SelectHandler;
   pointResolution: number;
   voxelResolution: number;
   debugVoxels?: boolean;
@@ -32,7 +31,7 @@ interface ThreePointVisProps {
 
 export const ThreePointVis = memo((props: ThreePointVisProps) => {
   const {
-    data, selectedPoints, clusters, onSelect, pointResolution,
+    data, selectedPoints, clusters, pointResolution,
     voxelResolution, debugVoxels, usePerPointLighting, isAutoCamera,
   } = props;
 
@@ -122,7 +121,6 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
       <ambientLight color="#ffffff" intensity={0.1} />
       <hemisphereLight
         color="#ffffff"
-        skyColor={new THREE.Color('#ffffff')}
         groundColor={new THREE.Color('#080808')}
         intensity={1.0}
       />
@@ -130,8 +128,6 @@ export const ThreePointVis = memo((props: ThreePointVisProps) => {
       {voxelResolution <= 1
         ? (
           <InstancedPoints
-            selectedPoints={selectedPoints}
-            onSelect={onSelect}
             data={data}
             enableCulling
             pointSegments={pointResolution}

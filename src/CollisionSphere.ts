@@ -14,9 +14,9 @@ export interface CollisionSphere extends Object3D {
 }
 
 // eslint-disable-next-line no-redeclare
-export class CollisionSphere implements Object3D {
+export class CollisionSphere extends Object3D {
   constructor(sphere: Sphere, index: number) {
-    Object3D.call(this);
+    super();
 
     this.type = 'CollisionSphere';
 
@@ -33,7 +33,7 @@ export class CollisionSphere implements Object3D {
   // eslint-disable-next-line consistent-return
   raycast(raycaster: Raycaster, intersects: Intersection[]) {
     const { matrixWorld } = this;
-    inverseMatrix.getInverse(matrixWorld);
+    inverseMatrix.copy(matrixWorld).invert();
     ray.copy(raycaster.ray).applyMatrix4(inverseMatrix);
     const threshold = raycaster.params.Points?.threshold;
 

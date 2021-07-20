@@ -6,7 +6,7 @@ import {
   Mesh, MOUSE, Sphere, Vector3,
 } from 'three';
 import useAxios from 'axios-hooks';
-import { Camera, Canvas } from 'react-three-fiber';
+import { Canvas, Camera } from '@react-three/fiber';
 import { useHistory, useLocation } from 'react-router-dom';
 import qs from 'query-string';
 import { History, Location } from 'history';
@@ -17,7 +17,6 @@ import { ThreePointVis } from './ThreePointVis/ThreePointVis';
 import { PointInfo } from './PointInfo/PointInfo';
 import { cleanTerm, DataList } from './DataList/DataList';
 import { CollisionSphere } from './CollisionSphere';
-import { Effects } from './ThreePointVis/Effects';
 import { Stats } from './ThreePointVis/Stats';
 import {
   CLIP_SCALE_FACTOR,
@@ -37,6 +36,7 @@ import { LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
 import { formatNumber, range, useLocalStorage } from './util';
 import { useWindowSize } from './ViewportHooks';
 import { ClusterHulls } from './ThreePointVis/ClusterHulls';
+import { Effects } from './ThreePointVis/Effects';
 
 export interface Point {
   id: number;
@@ -250,29 +250,36 @@ export default function App() {
     );
   }), [resolutionScales, width, height]);
 
+  const effects = <Effects useAA={useAntiAliasing} useUnrealBloom={usePostProcessing} />;
+
   return (
     <div className="App">
       {pointsLoading && <LoadingOverlay message="Loading dollops of dope data" />}
       {pointsError && <span className="error-message">{pointsError.message}</span>}
       {!pointsLoading && !pointsError && redditData && redditData.length && (
-      <div className="vis-container" key={`${redditData.length} ${resolutionScale}`}>
+      <div
+        className="vis-container"
+        role="presentation"
+        key={`${redditData.length} ${resolutionScale}`}
+        onMouseDown={handlePointerDown}
+        onMouseUp={handleClick}
+      >
         <Canvas
-          concurrent
-          gl={{ antialias: false }}
-          pixelRatio={resolutionScale}
+          gl={{
+            antialias: false,
+          }}
+          dpr={resolutionScale}
+          linear
+          flat
           camera={{ position: [0, 0, 600], far: viewDistance }}
           onCreated={(gl) => setCamera(gl.camera)}
-          onPointerDown={handlePointerDown}
-          onPointerUp={handleClick}
         >
           <Stats />
-          {(usePostProcessing || useAntiAliasing)
-                && <Effects useAA={useAntiAliasing} useUnrealBloom={usePostProcessing} />}
+          {(usePostProcessing || useAntiAliasing) && effects}
           <ThreePointVis
             data={redditData}
             clusters={clusters}
             selectedPoints={selectedPoints}
-            onSelect={selectOrDeselectPoint}
             pointResolution={pointResolution}
             voxelResolution={voxelResolution}
             debugVoxels={debugVoxels}

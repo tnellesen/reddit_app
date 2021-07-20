@@ -36,6 +36,10 @@ const updateColors = (
   }
 };
 
+// re-use for instance computations
+const scratchObject3D = new Object3D();
+const sharedMaterial = new MeshLambertMaterial({ vertexColors: true });
+
 export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
   const {
     data, pointSegments, voxelResolution, debugVoxels,
@@ -78,10 +82,6 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
     setVoxels(newVoxels);
   }, [data, voxelResolution]);
 
-  // re-use for instance computations
-  const scratchObject3D = useMemo(() => new Object3D(), []);
-  const sharedMaterial = useMemo(() => new MeshLambertMaterial({ vertexColors: true }), []);
-
   // Set up voxels with appropriate data (only when data changes, not per frame)
   React.useEffect(() => {
     for (let i = 0; i < voxels.length; ++i) {
@@ -115,7 +115,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         );
       }
     }
-  }, [voxels, scratchObject3D, colorArrays, debugVoxels]);
+  }, [voxels, colorArrays, debugVoxels]);
 
   return (
     <>
@@ -141,6 +141,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
               <instancedBufferAttribute
                 name={`color - voxel ${index}`}
                 ref={(colorAttrib: THREE.InstancedBufferAttribute) => colorAttribs.current[index] = colorAttrib}
+                // @ts-ignore
                 attachObject={['attributes', 'color']}
                 args={[colorArrays[index], 3]}
               />

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { extend, useThree, useFrame } from 'react-three-fiber';
+import { extend, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import useEventListener from '@use-it/event-listener';
 import * as THREE from 'three';
