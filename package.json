@@ -5,28 +5,29 @@
   "keywords": [],
   "main": "src/index.tsx",
   "dependencies": {
+    "@react-three/fiber": "^7.0.5",
     "@types/react-router-dom": "^5.1.6",
     "@types/react-tabs": "^2.3.2",
     "@types/stats.js": "0.17.0",
-    "@use-it/event-listener": "0.1.5",
+    "@types/three": "^0.130.0",
+    "@use-it/event-listener": "^0.1.6",
     "axios": "0.19.2",
-    "axios-hooks": "2.1.0",
+    "axios-hooks": "^2.6.3",
     "history": "^5.0.0",
     "node-sass": "^4.14.1",
+    "postprocessing": "^6.22.2",
     "query-string": "^6.13.5",
-    "react": "^16.12.0",
-    "react-autocomplete": "^1.8.1",
-    "react-dom": "^16.12.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-tabs": "^3.1.1",
-    "react-three-fiber": "^4.2.21",
     "react-window": "^1.8.5",
     "stats.js": "0.17.0",
-    "three": "^0.119.1"
+    "three": "^0.130.1"
   },
   "devDependencies": {
-    "@types/react": "16.9.19",
+    "@types/react": "^17.0.14",
     "@types/react-autocomplete": "^1.8.5",
     "@types/react-dom": "16.9.5",
     "@types/react-virtualized": "^9.21.10",
@@ -40,8 +41,7 @@
     "eslint-plugin-react": "^7.22.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "react-scripts": "^4.0.1",
-    "react-virtualized": "^9.22.2",
-    "typescript": "3.7.5"
+    "typescript": "^4.3.5"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,20 +1,17 @@
 import * as React from 'react';
 import * as THREE from 'three';
 import {
-  MouseEvent, useThree, useFrame, Camera,
-} from 'react-three-fiber';
+  useThree, useFrame,
+} from '@react-three/fiber';
 import {
-  Frustum, Matrix4, Vector3, InstancedBufferAttribute,
+  Frustum, Matrix4, Vector3, InstancedBufferAttribute, Camera,
 } from 'three';
 import { MutableRefObject, useEffect, useState } from 'react';
-import { SelectedIds, SelectedPoints, SelectHandler } from './ThreePointVis';
 import { Point } from '../App';
-import { SCALE_FACTOR, clusterColors, POINT_RADIUS } from '../constants';
+import { clusterColors, POINT_RADIUS } from '../constants';
 
 interface InstancedPointsProps {
   data: Point[];
-  selectedPoints: SelectedPoints;
-  onSelect: SelectHandler;
   enableCulling?: boolean;
   pointSegments: number;
 }
@@ -27,11 +24,8 @@ const scratchPos = new Vector3(0, 0, 0);
 const frustum = new Frustum();
 const projScreenMatrix = new Matrix4();
 
-const SELECTED_COLOR = '#6f6';
-
 const updateColors = (
   data: Point[],
-  selectedIds: SelectedIds,
   pointIndexToId: number[],
   maxCount: number,
   colorArray: Float32Array,
@@ -40,7 +34,7 @@ const updateColors = (
   for (let i = 0; i < maxCount; ++i) {
     const point = data[pointIndexToId[i]];
     scratchColor.set(
-      selectedIds.includes(point.id) ? SELECTED_COLOR : clusterColors[point.cluster],
+      clusterColors[point.cluster],
     );
     scratchColor.toArray(colorArray, i * 3);
 
@@ -60,7 +54,6 @@ function updateInstancedMeshMatrices(
   pointIndexToId: number[],
   colorArray: Float32Array,
   colorAttrib: MutableRefObject<InstancedBufferAttribute | undefined>,
-  selectedIds: SelectedIds,
 ): number {
   let visibleInstanceCount = 0;
   if (mesh) {
@@ -102,7 +95,6 @@ function updateInstancedMeshMatrices(
 
     updateColors(
       data,
-      selectedIds,
       pointIndexToId,
       visibleInstanceCount,
       colorArray,
@@ -112,46 +104,14 @@ function updateInstancedMeshMatrices(
   return visibleInstanceCount;
 }
 
-const useMousePointInteraction = (
-  onSelect: SelectHandler,
-  pointIndexToId: number[],
-) => {
-  // track mousedown position to skip click handlers on drags
-  const mouseDownRef = React.useRef([0, 0]);
-  const handlePointerDown = (event: MouseEvent) => {
-    mouseDownRef.current[0] = event.clientX;
-    mouseDownRef.current[1] = event.clientY;
-  };
-
-  const handleClick = (event: MouseEvent) => {
-    const { instanceId, clientX, clientY } = event;
-    const downDistance = Math.sqrt(
-      mouseDownRef.current[0] - clientX ** 2
-        + mouseDownRef.current[1] - clientY ** 2,
-    );
-
-    // skip click if we dragged more than 5px distance
-    if (downDistance > 5) {
-      event.stopPropagation();
-      return;
-    }
-
-    const id = instanceId !== undefined ? pointIndexToId[instanceId] : -1;
-
-    onSelect(id, event.ctrlKey);
-  };
-
-  return { handlePointerDown, handleClick };
-};
-
 export const InstancedPoints = (props: InstancedPointsProps) => {
   const {
-    data, selectedPoints, onSelect, enableCulling, pointSegments,
+    data, enableCulling, pointSegments,
   } = props;
   const pointIndexToId = data.map((point) => point.id);
 
   const meshRef = React.useRef<THREE.InstancedMesh>();
-  const [mesh, setMesh] = useState();
+  const [mesh, setMesh] = useState<THREE.InstancedMesh>();
   useEffect(() => setMesh(meshRef.current), [data]);
 
   const { camera } = useThree();
@@ -174,42 +134,9 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
         pointIndexToId,
         colorArray,
         colorAttrib,
-        selectedPoints.map((point) => point.id),
       );
     }
   });
-
-  const { handleClick, handlePointerDown } = useMousePointInteraction(
-    onSelect,
-    pointIndexToId,
-  );
-
-  const renderInstancedMesh = selectedPoints.map(
-    (point) => (
-      <group
-        position={[
-          point.x,
-          point.y,
-          point.z,
-        ]}
-      >
-        <pointLight
-          distance={19 * SCALE_FACTOR}
-          position={[0, 0, 0]}
-          intensity={2.5}
-          decay={30}
-          color={SELECTED_COLOR}
-        />
-        <pointLight
-          distance={10 * SCALE_FACTOR}
-          position={[0, 0, 0]}
-          intensity={1.5}
-          decay={1}
-          color={SELECTED_COLOR}
-        />
-      </group>
-    ),
-  );
 
   return (
     <>
@@ -222,8 +149,6 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
             (null as unknown) as THREE.Material,
             numPoints,
         ]}
-        onPointerUp={handleClick}
-        onPointerDown={handlePointerDown}
       >
         <sphereBufferGeometry
           attach="geometry"
@@ -232,15 +157,13 @@ export const InstancedPoints = (props: InstancedPointsProps) => {
         >
           <instancedBufferAttribute
             ref={colorAttrib}
+            // @ts-ignore
             attachObject={['attributes', 'color']}
             args={[colorArray, 3]}
           />
         </sphereBufferGeometry>
-        <meshStandardMaterial attach="material" vertexColors />
+        <meshLambertMaterial attach="material" vertexColors />
       </instancedMesh>
-      {selectedPoints.length > 0 && (
-        renderInstancedMesh
-      )}
     </>
   );
 };

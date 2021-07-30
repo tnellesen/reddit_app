@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import { ReactThreeFiber } from "react-three-fiber";
+import { ReactThreeFiber } from "@react-three/fiber";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
