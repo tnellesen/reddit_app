@@ -570,7 +570,6 @@ export default function App() {
                 You can use Reddit Explorer to find new communities and topics similar to your current interests or
                 just to see how different interests overlap across the internet.
                 The top communities of Reddit are shown arranged by overlapping user interests.
-                For more information, see TODO-insert Github or other links here.
               </p>
               <p>
                 If the app
@@ -598,10 +597,15 @@ export default function App() {
                   <br />
                 </>
                 ) }
-              <br />
+
               <h4>Created By:</h4>
               <div>Data Science: Tyler Nellesen</div>
               <div>Application: John Morone</div>
+              <br />
+              You can see the source for the front end app
+              {' '}
+              <a href="https://github.com/tnellesen/reddit_app">here</a>
+              .
             </TabPanel>
           </Tabs>
         )}
