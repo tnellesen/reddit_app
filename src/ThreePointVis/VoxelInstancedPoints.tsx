@@ -82,7 +82,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
     setVoxels(newVoxels);
   }, [data, voxelResolution]);
 
-  // Set up voxels with appropriate data (only when data changes, not per frame)
+  // Set up voxels with appropriate data (only when data or point resolution changes, not per frame)
   React.useEffect(() => {
     for (let i = 0; i < voxels.length; ++i) {
       const voxel = voxels[i];
@@ -115,7 +115,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         );
       }
     }
-  }, [voxels, colorArrays, debugVoxels]);
+  }, [voxels, colorArrays, debugVoxels, pointSegments]); // include pointSegments to reset mesh
 
   return (
     <>
@@ -123,6 +123,7 @@ export const VoxelInstancedPoints = memo((props: VoxelInstancedPointsProps) => {
         ? (
           <instancedMesh
             key={`${index} ${voxel.length}`}
+            name={`mesh - voxel ${index}`}
             ref={(mesh: THREE.InstancedMesh) => meshRefs.current[index] = mesh}
             args={[
                   // TODO sort out the bugged typing here.
